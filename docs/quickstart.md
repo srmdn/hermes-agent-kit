@@ -24,7 +24,7 @@ pip install hermes-kit
 
 ```bash
 hermes-kit install router fallback rate-limiter cost-tracker
-hermes gateway restart
+hermes-kit gateway run --accept-hooks
 ```
 
 ### Verify

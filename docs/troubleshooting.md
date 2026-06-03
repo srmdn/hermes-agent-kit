@@ -16,13 +16,12 @@ hermes gateway run --accept-hooks  # ensure hooks are enabled
 **Symptom:** Router configured but wrong model is used.
 
 **Causes:**
-1. Chat/topic ID doesn't match your routing table. Verify with `hermes gateway logs`.
+1. Chat/topic ID doesn't match your routing table. Check `hermes-kit router show`.
 2. Default fallback is being used because no topic matches.
-3. Bridge not patched. Start gateway with the bridge wrapper.
+3. Hook not loaded. Run `hermes-kit doctor`.
 
 **Fix:**
 ```bash
-# Run gateway with bridge patching
 hermes-kit gateway run --accept-hooks
 ```
 

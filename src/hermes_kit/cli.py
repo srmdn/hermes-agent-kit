@@ -84,9 +84,77 @@ def gateway_run() -> None:
     hermes_main()
 
 
+def _router_config_path() -> Path:
+    return Path(get_hooks_dir()) / "router" / "topic_router.yaml"
+
+
+def _read_router_config() -> dict:
+    path = _router_config_path()
+    if path.exists():
+        return yaml.safe_load(path.read_text()) or {}
+    return {}
+
+
+def _write_router_config(config: dict) -> None:
+    path = _router_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.dump(config, default_flow_style=False, sort_keys=False))
+
+
+def router_add(topic_id: str, model: str) -> None:
+    config = _read_router_config()
+    topics = config.get("topics") or {}
+    topics[topic_id] = {"model": model}
+    config["topics"] = topics
+    _write_router_config(config)
+    print(f"Added topic '{topic_id}' → {model}")
+
+
+def router_remove(topic_id: str) -> None:
+    config = _read_router_config()
+    topics = config.get("topics") or {}
+    if topic_id in topics:
+        del topics[topic_id]
+        _write_router_config(config)
+        print(f"Removed topic '{topic_id}'.")
+    else:
+        print(f"Topic '{topic_id}' not found.")
+
+
+def router_show() -> None:
+    config = _read_router_config()
+    default = config.get("default") or {}
+    topics = config.get("topics") or {}
+
+    if default:
+        print(f"Default: {default.get('model', 'not set')}")
+    if topics:
+        if default:
+            print()
+        for tid, route in topics.items():
+            print(f"  {tid}  →  {route.get('model', 'unknown')}")
+    if not default and not topics:
+        print("No routing configured.")
+
+
+def router_set_default(model: str) -> None:
+    config = _read_router_config()
+    config["default"] = {"model": model}
+    _write_router_config(config)
+    print(f"Default model: {model}")
+
+
+def _parse_flag(flag: str, args: list[str]) -> str | None:
+    try:
+        idx = args.index(flag)
+        return args[idx + 1]
+    except (ValueError, IndexError):
+        return None
+
+
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: hermes-kit <install|doctor|list|gateway run>")
+        print("Usage: hermes-kit <install|doctor|list|gateway run|router>")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -112,6 +180,42 @@ def main() -> None:
             print("Usage: hermes-kit gateway run [--accept-hooks] [-- ...]")
             sys.exit(1)
         gateway_run()
+
+    elif cmd == "router":
+        if len(sys.argv) < 3:
+            print("Usage: hermes-kit router <add|remove|show|set-default> [args]")
+            sys.exit(1)
+
+        subcmd = sys.argv[2]
+        args = sys.argv[3:]
+
+        if subcmd == "show":
+            router_show()
+
+        elif subcmd == "add":
+            topic_id = args[0] if args else None
+            model = _parse_flag("--model", args)
+            if not topic_id or not model:
+                print("Usage: hermes-kit router add <topic-id> --model <model>")
+                sys.exit(1)
+            router_add(topic_id, model)
+
+        elif subcmd == "remove":
+            if not args:
+                print("Usage: hermes-kit router remove <topic-id>")
+                sys.exit(1)
+            router_remove(args[0])
+
+        elif subcmd == "set-default":
+            model = _parse_flag("--model", args)
+            if not model:
+                print("Usage: hermes-kit router set-default --model <model>")
+                sys.exit(1)
+            router_set_default(model)
+
+        else:
+            print(f"Unknown router command: {subcmd}")
+            sys.exit(1)
 
     else:
         print(f"Unknown command: {cmd}")

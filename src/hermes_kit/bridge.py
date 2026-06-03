@@ -122,11 +122,11 @@ def alert_cost_exceeded(session_key: str, total: float, threshold: float) -> Non
 
 
 def patch_gateway_resolver() -> None:
-    import asyncio
+    import inspect
     from gateway.run import GatewayRunner
 
     original = GatewayRunner._resolve_session_agent_runtime
-    original_is_async = asyncio.iscoroutinefunction(original)
+    original_is_async = inspect.iscoroutinefunction(original)
 
     if original_is_async:
         async def patched_resolver(self, *args, **kwargs):
@@ -148,3 +148,9 @@ def patch_gateway_resolver() -> None:
             return model, runtime_kwargs
 
     GatewayRunner._resolve_session_agent_runtime = patched_resolver
+
+
+try:
+    patch_gateway_resolver()
+except ImportError:
+    pass

@@ -38,18 +38,13 @@ hermes-kit doctor
 hermes gateway restart
 ```
 
-Hooks land in `~/.hermes/hooks/<name>/`. Hermes discovers them on gateway restart.
+Or use the built-in wrapper which patches the bridge automatically:
 
-## Bridge Setup
-
-For the router and fallback modules to override AI models, add this to your Hermes gateway startup script:
-
-```python
-import hermes_kit.bridge
-hermes_kit.bridge.patch_gateway_resolver()
+```bash
+hermes-kit gateway run --accept-hooks
 ```
 
-No other Hermes source changes needed.
+Hooks land in `~/.hermes/hooks/<name>/`. Hermes discovers them on gateway restart.
 
 ## Modules
 

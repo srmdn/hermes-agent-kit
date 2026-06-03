@@ -1,6 +1,6 @@
 [project]
 name = "hermes-kit"
-version = "0.1.1"
+version = "0.2.0"
 description = "Production hardening pack for Hermes Agent — per-topic model routing, fallback chains, rate limiting, and cost tracking via gateway hooks"
 readme = "README.md"
 license = {text = "MIT"}
