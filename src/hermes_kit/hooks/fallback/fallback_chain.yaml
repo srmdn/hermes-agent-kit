@@ -1,5 +1,5 @@
 chains:
   # global:
-  #   - "claude-sonnet-4"
-  #   - "deepseek/deepseek-chat"
-  #   - "openai/gpt-4o-mini"
+  #   - "opencode-go/deepseek-v4-pro"
+  #   - "opencode-go/claude-sonnet-4"
+  #   - "opencode-go/gpt-4o-mini"

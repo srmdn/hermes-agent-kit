@@ -1,8 +1,7 @@
 default:
-  model: "openai/gpt-4o-mini"
-  # provider: "openrouter"
+  model: "opencode-go/gpt-4o-mini"
 
 topics:
   # "42":
-  #   model: "qwen/qwen-3.6-plus"
+  #   model: "opencode-go/qwen-3.6-plus"
   #   profile: "finance"

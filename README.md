@@ -60,13 +60,13 @@ Route Telegram topics to different AI models. Finance chat uses Qwen, coding cha
 ```yaml
 # ~/.hermes/hooks/router/topic_router.yaml
 default:
-  model: "openai/gpt-4o-mini"
+  model: "opencode-go/gpt-4o-mini"
 
 topics:
   "42":
-    model: "qwen/qwen-3.6-plus"
+    model: "opencode-go/qwen-3.6-plus"
   "7":
-    model: "deepseek/deepseek-chat"
+    model: "opencode-go/deepseek-v4-pro"
 ```
 
 ### fallback — Automatic Fallback Chain
@@ -77,9 +77,9 @@ Define a chain of models to try when the primary fails.
 # ~/.hermes/hooks/fallback/fallback_chain.yaml
 chains:
   global:
-    - "claude-sonnet-4"
-    - "deepseek/deepseek-chat"
-    - "openai/gpt-4o-mini"
+    - "opencode-go/claude-sonnet-4"
+    - "opencode-go/deepseek-v4-pro"
+    - "opencode-go/gpt-4o-mini"
 ```
 
 After a failure, call `hermes_kit.bridge.retry_with_fallback(session_key)` to advance to the next model.

@@ -2,19 +2,36 @@ import shutil
 import sys
 from pathlib import Path
 
+import yaml
+
 from hermes_kit.lib.hermes_api import get_hooks_dir
 
 
 HOOKS_SRC = Path(__file__).parent / "hooks"
-AVAILABLE_HOOKS = [d.name for d in HOOKS_SRC.iterdir() if d.is_dir()]
+
+_hook_dir_names = [d.name for d in HOOKS_SRC.iterdir() if d.is_dir()]
+
+_hook_names: dict[str, str] = {}
+_hook_dirs: dict[str, str] = {}
+for _dir in _hook_dir_names:
+    _hook_yaml = HOOKS_SRC / _dir / "HOOK.yaml"
+    if _hook_yaml.exists():
+        _name = yaml.safe_load(_hook_yaml.read_text()).get("name", _dir)
+    else:
+        _name = _dir
+    _hook_names[_dir] = _name
+    _hook_dirs[_name] = _dir
+
+AVAILABLE_HOOKS = sorted(_hook_dirs.keys())
 
 
 def install(hook_name: str) -> None:
-    src = HOOKS_SRC / hook_name
-    if not src.is_dir():
+    dir_name = _hook_dirs.get(hook_name)
+    if not dir_name:
         print(f"Unknown hook: {hook_name}. Available: {', '.join(AVAILABLE_HOOKS)}")
         sys.exit(1)
 
+    src = HOOKS_SRC / dir_name
     dest = Path(get_hooks_dir()) / hook_name
     if dest.exists():
         print(f"Hook '{hook_name}' already installed. Use 'hermes-kit reinstall {hook_name}' to overwrite.")
@@ -55,18 +72,31 @@ def doctor() -> None:
     print("Done.")
 
 
+def gateway_run() -> None:
+    from hermes_kit.bridge import patch_gateway_resolver
+
+    patch_gateway_resolver()
+
+    sys.argv = ["hermes", "gateway", "run"] + sys.argv[3:]
+
+    from hermes_cli.main import main as hermes_main
+
+    hermes_main()
+
+
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: hermes-kit <install|doctor|list>")
+        print("Usage: hermes-kit <install|doctor|list|gateway run>")
         sys.exit(1)
 
     cmd = sys.argv[1]
 
     if cmd == "install":
         if len(sys.argv) < 3:
-            print(f"Usage: hermes-kit install <hook>. Available: {', '.join(AVAILABLE_HOOKS)}")
+            print(f"Usage: hermes-kit install <hook> [<hook> ...]. Available: {', '.join(AVAILABLE_HOOKS)}")
             sys.exit(1)
-        install(sys.argv[2])
+        for hook_name in sys.argv[2:]:
+            install(hook_name)
 
     elif cmd == "doctor":
         doctor()
@@ -76,6 +106,12 @@ def main() -> None:
         for h in AVAILABLE_HOOKS:
             installed = " (installed)" if (Path(get_hooks_dir()) / h).exists() else ""
             print(f"  {h}{installed}")
+
+    elif cmd == "gateway":
+        if len(sys.argv) < 3 or sys.argv[2] != "run":
+            print("Usage: hermes-kit gateway run [--accept-hooks] [-- ...]")
+            sys.exit(1)
+        gateway_run()
 
     else:
         print(f"Unknown command: {cmd}")
