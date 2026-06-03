@@ -7,8 +7,7 @@
 **Fix:**
 ```bash
 hermes-kit doctor                # verify hooks are in ~/.hermes/hooks/
-hermes gateway restart           # Hermes only discovers hooks on restart
-hermes gateway run --accept-hooks  # ensure hooks are enabled
+hermes-kit gateway run --accept-hooks  # restart with bridge patching
 ```
 
 ## Model override not working

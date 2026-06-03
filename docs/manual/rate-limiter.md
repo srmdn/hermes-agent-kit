@@ -4,7 +4,9 @@ Prevent a single user or chat from draining your API budget by setting message l
 
 ## How It Works
 
-The rate limiter tracks message counts per session. If a user exceeds the configured limit within a time window, further messages are blocked.
+The rate limiter tracks message counts per session. If a user exceeds the configured limit within a time window, the session is flagged as rate-limited.
+
+> ⚠️ Rate limiting currently tracks and flags sessions but does not block messages. Enforcement is planned for an upcoming release.
 
 ## Configuration
 

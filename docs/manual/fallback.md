@@ -16,24 +16,18 @@ chains:
     - "opencode-go/deepseek-v4-pro"     # primary
     - "opencode-go/claude-sonnet-4"      # first fallback
     - "opencode-go/gpt-4o"               # second fallback
-    - "openai/gpt-4o-mini"               # last resort
+    - "opencode-go/gpt-4o-mini"          # last resort
 ```
 
 Models are tried in order. If `deepseek-v4-pro` fails → try `claude-sonnet-4` → try `gpt-4o` → try `gpt-4o-mini`.
+
+> ⚠️ The fallback chain uses your configured provider for all models. Cross-provider fallback (e.g. opencode-go → OpenAI) is not yet supported.
 
 ## Best Practices
 
 ### Cross-Provider Fallback
 
-Always include models from different providers. If opencode-go is down entirely, an opencode-go fallback chain won't help:
-
-```yaml
-chains:
-  global:
-    - "opencode-go/deepseek-v4-pro"     # primary (opencode-go)
-    - "anthropic/claude-sonnet-4"        # fallback (different provider)
-    - "openai/gpt-4o-mini"               # last resort (different provider)
-```
+Cross-provider fallback is planned but not yet available. For now, all models in the chain use the same provider. To switch providers per topic, use [multi-provider routing](router.md) instead.
 
 ### Cost-Conscious Ordering
 
@@ -43,7 +37,7 @@ Put cheaper models last:
 chains:
   global:
     - "opencode-go/gpt-4o"               # $2.50/$10.00 per 1M
-    - "anthropic/claude-sonnet-4"        # $3.00/$15.00
+    - "opencode-go/claude-sonnet-4"      # $3.00/$15.00
     - "opencode-go/gpt-4o-mini"          # $0.15/$0.60 — cheap safety net
 ```
 

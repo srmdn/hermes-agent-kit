@@ -26,7 +26,31 @@ Send `/start` to [@userinfobot](https://t.me/userinfobot) — it replies with yo
 
 Group chat IDs start with `-` (e.g., `-1001234567890`). Topic IDs within groups are numeric IDs specific to the topic thread.
 
-## Configuration
+## CLI Management
+
+Instead of editing YAML directly, manage routes from the terminal:
+
+```bash
+# Set default model
+hermes-kit router set-default --model opencode-go/gpt-4o-mini
+
+# Add topic mappings
+hermes-kit router add 42 --model opencode-go/deepseek-v4-pro
+hermes-kit router add 7 --model opencode-go/qwen-3.6-plus
+
+# Route to a different provider
+hermes-kit router add 42 --model gpt-4o --provider openai
+
+# View current routing table
+hermes-kit router show
+
+# Remove a mapping
+hermes-kit router remove 7
+```
+
+All commands read/write `~/.hermes/hooks/router/topic_router.yaml` — same file as manual editing below.
+
+## Manual YAML Configuration
 
 Edit `~/.hermes/hooks/router/topic_router.yaml`:
 
@@ -56,6 +80,35 @@ topics:
 
 See the full [providers guide](../providers.md) for model lists and pricing.
 
+## Multi-Provider Routing
+
+Route specific topics to different AI providers. API keys are resolved from `~/.hermes/.env`:
+
+```yaml
+default:
+  model: "opencode-go/gpt-4o-mini"    # uses OPENCODE_GO_API_KEY
+
+topics:
+  "42":
+    model: "gpt-4o"
+    provider: "openai"                # uses OPENAI_API_KEY
+  "7":
+    model: "claude-sonnet-4-20250514"
+    provider: "anthropic"             # uses ANTHROPIC_API_KEY
+  "99":
+    model: "deepseek-chat"
+    provider: "deepseek"              # uses DEEPSEEK_API_KEY
+```
+
+Via CLI:
+```bash
+hermes-kit router set-default --model opencode-go/gpt-4o-mini
+hermes-kit router add 42 --model gpt-4o --provider openai
+hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
+```
+
+Supported provider keys: `opencode-go`, `openai`, `anthropic`, `deepseek`, `google`, `openrouter`.
+
 ## Example: Multi-Purpose Telegram Gateway
 
 You run a Telegram group with three topics:
@@ -84,7 +137,7 @@ Topics #general and anything else fall back to `gpt-4o-mini`.
 After configuring, restart the gateway:
 
 ```bash
-hermes gateway restart
+hermes-kit gateway run --accept-hooks
 ```
 
 Send messages in different topics. Check that responses use the assigned model by looking at gateway logs or token usage.
