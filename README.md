@@ -99,7 +99,7 @@ limits:
       max_messages_per_window: 50
 ```
 
-> ⚠️ Rate limiter currently tracks usage but does not block messages. Enforcement is planned (see [P2 roadmap](.sisyphus/handoff.md)).
+> ⚠️ Rate limiter currently tracks usage but does not block messages. Enforcement is planned for an upcoming release.
 
 ### cost-tracker — Real-Time Cost Tracking
 
