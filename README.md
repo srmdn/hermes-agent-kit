@@ -17,7 +17,7 @@ hermes-kit fills these gaps with production-grade hooks.
 ## Install
 
 ```bash
-pip install hermes-kit
+pip install hermes-agent-kit
 ```
 
 ## Quickstart

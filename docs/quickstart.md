@@ -17,7 +17,7 @@ The agent will:
 ## Manual Install
 
 ```bash
-pip install hermes-kit
+pip install hermes-agent-kit
 ```
 
 ### One-Command Setup

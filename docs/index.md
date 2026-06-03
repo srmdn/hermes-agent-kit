@@ -20,7 +20,7 @@ Paste this to your Hermes agent:
 Or do it manually:
 
 ```bash
-pip install hermes-kit
+pip install hermes-agent-kit
 hermes-kit install router fallback rate-limiter cost-tracker
 hermes-kit gateway run --accept-hooks
 ```
