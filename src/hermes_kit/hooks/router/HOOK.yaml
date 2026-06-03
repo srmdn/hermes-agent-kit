@@ -1,0 +1,5 @@
+name: router
+description: Route messages to different AI models based on Telegram topic ID
+events:
+  - session:start
+  - session:reset

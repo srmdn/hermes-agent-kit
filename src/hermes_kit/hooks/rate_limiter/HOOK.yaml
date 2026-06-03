@@ -1,0 +1,5 @@
+name: rate-limiter
+description: Per-user and per-chat rate limiting to prevent API cost spikes
+events:
+  - session:start
+  - agent:step

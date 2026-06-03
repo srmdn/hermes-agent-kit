@@ -1,0 +1,5 @@
+chains:
+  # global:
+  #   - "claude-sonnet-4"
+  #   - "deepseek/deepseek-chat"
+  #   - "openai/gpt-4o-mini"

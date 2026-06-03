@@ -1,0 +1,8 @@
+limits:
+  global:
+    max_messages_per_window: 100
+    window_seconds: 3600
+  # per_user:
+  #   "123456789":
+  #     max_messages_per_window: 50
+  #     window_seconds: 3600

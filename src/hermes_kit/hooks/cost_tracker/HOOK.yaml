@@ -1,0 +1,5 @@
+name: cost-tracker
+description: Real-time token cost tracking with per-topic breakdown and budget alerts
+events:
+  - agent:step
+  - agent:end
