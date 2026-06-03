@@ -1,6 +1,7 @@
 .venv/
 .hermes-local/
 .sisyphus/
+AGENTS.md
 __pycache__/
 *.pyc
 *.pyo
