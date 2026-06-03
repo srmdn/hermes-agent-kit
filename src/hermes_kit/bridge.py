@@ -121,6 +121,18 @@ def alert_cost_exceeded(session_key: str, total: float, threshold: float) -> Non
     print(f"[hermes-kit] COST ALERT: session {session_key} total ${total:.4f} exceeds threshold ${threshold:.2f}")
 
 
+_RUNTIME_KEYS = ("provider", "api_key", "base_url", "api_mode")
+
+
+def _apply_override(override: dict, model: str, runtime_kwargs: dict) -> tuple[str, dict]:
+    model = override.get("model", model)
+    for key in _RUNTIME_KEYS:
+        val = override.get(key)
+        if val is not None:
+            runtime_kwargs[key] = val
+    return model, runtime_kwargs
+
+
 def patch_gateway_resolver() -> None:
     import inspect
     from gateway.run import GatewayRunner
@@ -135,7 +147,7 @@ def patch_gateway_resolver() -> None:
             if session_key:
                 override = get_override(session_key)
                 if override:
-                    model = override["model"]
+                    model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
             return model, runtime_kwargs
     else:
         def patched_resolver(self, *args, **kwargs):
@@ -144,7 +156,7 @@ def patch_gateway_resolver() -> None:
             if session_key:
                 override = get_override(session_key)
                 if override:
-                    model = override["model"]
+                    model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
             return model, runtime_kwargs
 
     GatewayRunner._resolve_session_agent_runtime = patched_resolver

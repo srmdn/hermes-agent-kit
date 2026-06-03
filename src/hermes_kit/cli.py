@@ -101,13 +101,17 @@ def _write_router_config(config: dict) -> None:
     path.write_text(yaml.dump(config, default_flow_style=False, sort_keys=False))
 
 
-def router_add(topic_id: str, model: str) -> None:
+def router_add(topic_id: str, model: str, provider: str | None = None) -> None:
     config = _read_router_config()
     topics = config.get("topics") or {}
-    topics[topic_id] = {"model": model}
+    entry: dict[str, str] = {"model": model}
+    if provider:
+        entry["provider"] = provider
+    topics[topic_id] = entry
     config["topics"] = topics
     _write_router_config(config)
-    print(f"Added topic '{topic_id}' → {model}")
+    provider_msg = f" (provider: {provider})" if provider else ""
+    print(f"Added topic '{topic_id}' → {model}{provider_msg}")
 
 
 def router_remove(topic_id: str) -> None:
@@ -127,21 +131,31 @@ def router_show() -> None:
     topics = config.get("topics") or {}
 
     if default:
-        print(f"Default: {default.get('model', 'not set')}")
+        line = f"Default: {default.get('model', 'not set')}"
+        if default.get("provider"):
+            line += f" (provider: {default['provider']})"
+        print(line)
     if topics:
         if default:
             print()
         for tid, route in topics.items():
-            print(f"  {tid}  →  {route.get('model', 'unknown')}")
+            line = f"  {tid}  →  {route.get('model', 'unknown')}"
+            if route.get("provider"):
+                line += f" (provider: {route['provider']})"
+            print(line)
     if not default and not topics:
         print("No routing configured.")
 
 
-def router_set_default(model: str) -> None:
+def router_set_default(model: str, provider: str | None = None) -> None:
     config = _read_router_config()
-    config["default"] = {"model": model}
+    entry: dict[str, str] = {"model": model}
+    if provider:
+        entry["provider"] = provider
+    config["default"] = entry
     _write_router_config(config)
-    print(f"Default model: {model}")
+    provider_msg = f" (provider: {provider})" if provider else ""
+    print(f"Default model: {model}{provider_msg}")
 
 
 def _parse_flag(flag: str, args: list[str]) -> str | None:
@@ -196,9 +210,9 @@ def main() -> None:
             topic_id = args[0] if args else None
             model = _parse_flag("--model", args)
             if not topic_id or not model:
-                print("Usage: hermes-kit router add <topic-id> --model <model>")
+                print("Usage: hermes-kit router add <topic-id> --model <model> [--provider <provider>]")
                 sys.exit(1)
-            router_add(topic_id, model)
+            router_add(topic_id, model, provider=_parse_flag("--provider", args))
 
         elif subcmd == "remove":
             if not args:
@@ -209,9 +223,9 @@ def main() -> None:
         elif subcmd == "set-default":
             model = _parse_flag("--model", args)
             if not model:
-                print("Usage: hermes-kit router set-default --model <model>")
+                print("Usage: hermes-kit router set-default --model <model> [--provider <provider>]")
                 sys.exit(1)
-            router_set_default(model)
+            router_set_default(model, provider=_parse_flag("--provider", args))
 
         else:
             print(f"Unknown router command: {subcmd}")
