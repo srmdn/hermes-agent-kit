@@ -29,6 +29,9 @@ def _clear_bridge_state():
 def _make_mock_runner(session_model_overrides=None):
     runner = MagicMock()
     runner._session_model_overrides = session_model_overrides or {}
+    # v0.16.0: _last_resolved_model is a dict cache for last-known-good model
+    # recovery. Set None to skip the recovery path in mock-based tests.
+    runner._last_resolved_model = None
     return runner
 
 
