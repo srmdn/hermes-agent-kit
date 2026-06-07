@@ -19,6 +19,7 @@ def make_context(chat_id="123456789", thread_id=None, platform="telegram"):
     return {
         "session_key": ":".join(parts),
         "chat_id": chat_id,
+        "user_id": chat_id,
         "platform": platform,
     }
 
@@ -122,3 +123,45 @@ class TestIrrelevantEvents:
                 import asyncio
                 asyncio.run(handle("agent:end", ctx))
                 mock_set.assert_not_called()
+
+
+TRACK_USER_TOPIC = "hermes_kit.hooks.router.handler.bridge.track_user_topic"
+
+
+class TestBridgeTracking:
+    def test_tracks_user_topic_on_session_start(self):
+        ctx = make_context(chat_id="111")
+        with patch(ROUTING, {}):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE):
+                    with patch(TRACK_USER_TOPIC) as mock_track:
+                        import asyncio
+
+                        asyncio.run(handle("session:start", ctx))
+                        mock_track.assert_called_once_with("111", "111")
+
+    def test_tracks_user_topic_with_thread_id(self):
+        ctx = make_context(chat_id="111", thread_id="222")
+        with patch(ROUTING, {}):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE):
+                    with patch(TRACK_USER_TOPIC) as mock_track:
+                        import asyncio
+
+                        asyncio.run(handle("session:start", ctx))
+                        mock_track.assert_called_once_with("111", "111")
+
+    def test_no_tracking_when_missing_user_id(self):
+        ctx = {
+            "session_key": "agent:main:telegram:dm:111",
+            "chat_id": "111",
+            "platform": "telegram",
+        }
+        with patch(ROUTING, {}):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE):
+                    with patch(TRACK_USER_TOPIC) as mock_track:
+                        import asyncio
+
+                        asyncio.run(handle("session:start", ctx))
+                        mock_track.assert_not_called()

@@ -116,3 +116,17 @@ class TestModelSwitchE2E:
         data = self._read_yaml()
         assert data["topics"]["456"]["model"] == "deepseek"
         assert data["topics"]["123"]["model"] == "gpt-4o"
+
+    def test_uses_bridge_topic_when_available(self):
+        bridge._user_topics["123"] = "topic-456"
+        try:
+            self._call(args="gpt-4o")
+
+            data = self._read_yaml()
+            assert "topic-456" in data["topics"], (
+                f"Expected routing key 'topic-456' from bridge, got: {list(data.get('topics', {}).keys())}"
+            )
+            assert data["topics"]["topic-456"]["model"] == "gpt-4o"
+            assert "123" not in data["topics"]
+        finally:
+            bridge._user_topics.clear()

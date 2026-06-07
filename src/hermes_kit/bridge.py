@@ -86,6 +86,20 @@ def is_rate_limited(session_key: str) -> bool:
     return session_key in _rate_limited
 
 
+# Shared state for cross-hook communication. Router hook tracks which
+# topic a user last interacted with; model-switch hook reads it so
+# /route commands are applied to the correct Telegram topic in groups.
+_user_topics: dict[str, str] = {}
+
+
+def track_user_topic(user_id: str, topic_id: str) -> None:
+    _user_topics[user_id] = topic_id
+
+
+def get_user_topic(user_id: str) -> str | None:
+    return _user_topics.get(user_id)
+
+
 _session_costs: dict[str, dict[str, float]] = {}
 _cost_pricing: dict[str, tuple[float, float]] = {
     "gpt-4o": (2.50, 10.00),

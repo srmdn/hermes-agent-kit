@@ -38,9 +38,9 @@ def _write_routing(config: dict) -> None:
 
 def _routing_id(context: dict) -> str | None:
     user_id = context.get("user_id", "")
-    if user_id:
-        return user_id
-    return None
+    if not user_id:
+        return None
+    return bridge.get_user_topic(user_id) or user_id
 
 
 async def handle(event_type: str, context: dict) -> dict | None:

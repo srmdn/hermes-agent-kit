@@ -33,6 +33,9 @@ async def handle(event_type: str, context: dict) -> None:
     if event_type == "session:start":
         routing_id = _extract_routing_id(context)
         if routing_id:
+            user_id = context.get("user_id")
+            if user_id:
+                bridge.track_user_topic(user_id, routing_id)
             route = _ROUTING.get(routing_id)
             if not route:
                 route = _DEFAULT

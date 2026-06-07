@@ -381,3 +381,23 @@ class TestYamlPersistence:
         assert mock_write.called
         written = mock_write.call_args[0][0]
         assert written["topics"]["42"] == {"model": "gpt-4o"}
+
+
+class TestBridgeIntegration:
+    def test_prefers_bridge_topic_over_user_id(self):
+        from hermes_kit import bridge
+
+        bridge._user_topics["12345"] = "topic-999"
+        try:
+            assert _routing_id({"user_id": "12345"}) == "topic-999"
+        finally:
+            bridge._user_topics.clear()
+
+    def test_falls_back_to_user_id_when_no_bridge_entry(self):
+        from hermes_kit import bridge
+
+        assert bridge._user_topics == {}
+        assert _routing_id({"user_id": "12345"}) == "12345"
+
+    def test_none_when_no_user_id_and_no_bridge(self):
+        assert _routing_id({"platform": "telegram"}) is None
