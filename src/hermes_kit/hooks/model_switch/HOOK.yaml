@@ -1,0 +1,4 @@
+name: model-switch
+description: Switch model for current topic via /route slash command
+events:
+  - command:route

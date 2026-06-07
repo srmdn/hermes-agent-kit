@@ -24,6 +24,8 @@ hermes logs | grep "chat_id"
 
 Send `/start` to [@userinfobot](https://t.me/userinfobot) — it replies with your user ID and any group chat info.
 
+> **Using /route?** The `/route` command uses your Telegram user ID automatically — no need to look up IDs. If you're managing routes via CLI or YAML, use the methods above.
+
 Group chat IDs start with `-` (e.g., `-1001234567890`). Topic IDs within groups are numeric IDs specific to the topic thread.
 
 ## CLI Management
@@ -49,6 +51,40 @@ hermes-kit router remove 7
 ```
 
 All commands read/write `~/.hermes/hooks/router/topic_router.yaml` — same file as manual editing below.
+
+## Per-Topic Routing via Telegram (/route)
+
+Switch models directly from Telegram without touching the server. The model-switch hook handles `/route` commands.
+
+### Install the hook
+
+```bash
+hermes-kit install model-switch
+```
+
+### Commands
+
+| Command | What it does |
+|---------|-------------|
+| `/route gpt-4o` | Switch this topic to GPT-4o |
+| `/route show` | Show current routing for this topic |
+| `/route default claude-sonnet-4` | Set the default model for unmapped topics |
+| `/route reset` | Remove routing for this topic (fall back to default) |
+
+### How it works
+
+1. User sends `/route gpt-4o` in a Telegram DM or group topic
+2. Model-switch hook fires, updates `topic_router.yaml` with the new mapping
+3. Next `session:start` (next message), the router hook picks up the change
+
+### When to use /route vs CLI
+
+| Use | Method |
+|-----|--------|
+| Quick model switch during chat | `/route` in Telegram |
+| Multi-provider routing | `hermes-kit router add --provider openai` |
+| Bulk setup (many topics) | `hermes-kit router` CLI |
+| Session-scoped switch | `/route` then `/reset` when done |
 
 ## Manual YAML Configuration
 
@@ -141,3 +177,11 @@ hermes-kit gateway run --accept-hooks
 ```
 
 Send messages in different topics. Check that responses use the assigned model by looking at gateway logs or token usage.
+
+### Verify /route is working
+
+```bash
+hermes-kit install model-switch
+hermes-kit doctor   # should show model-switch installed
+hermes logs | grep "/route"   # after sending a command
+```
