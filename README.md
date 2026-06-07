@@ -33,7 +33,7 @@ pip install hermes-agent-kit
 
 ```bash
 # Install all hooks in one command
-hermes-kit install router fallback rate-limiter cost-tracker
+hermes-kit install router fallback rate-limiter cost-tracker model-switch
 
 # Verify
 hermes-kit doctor

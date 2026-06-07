@@ -4,7 +4,7 @@
 
 Paste this to your Hermes agent and let it handle everything:
 
-> "Install and configure hermes-kit for production hardening. Install all four hooks (router, fallback, rate-limiter, cost-tracker), discover my Telegram topic IDs, set up model routing per topic, configure fallback chains, enable rate limiting, and restart the gateway. I use opencode-go as my provider."
+> "Install and configure hermes-kit for production hardening. Install all hooks (router, fallback, rate-limiter, cost-tracker, model-switch), discover my Telegram topic IDs, set up model routing per topic, configure fallback chains, enable rate limiting, and restart the gateway. I use opencode-go as my provider."
 
 The agent will:
 1. Install hermes-kit
@@ -23,7 +23,7 @@ pip install hermes-agent-kit
 ### One-Command Setup
 
 ```bash
-hermes-kit install router fallback rate-limiter cost-tracker
+hermes-kit install router fallback rate-limiter cost-tracker model-switch
 hermes-kit gateway run --accept-hooks
 ```
 
@@ -39,6 +39,7 @@ router: HOOK.yaml ✓ handler.py ✓
 fallback: HOOK.yaml ✓ handler.py ✓
 rate-limiter: HOOK.yaml ✓ handler.py ✓
 cost-tracker: HOOK.yaml ✓ handler.py ✓
+model-switch: HOOK.yaml ✓ handler.py ✓
 ```
 
 ### Next Steps

@@ -15,13 +15,13 @@ hermes-kit fills these gaps with production-grade hooks — no core Hermes chang
 
 Paste this to your Hermes agent:
 
-> "Install and configure hermes-kit for production hardening. Install all four hooks (router, fallback, rate-limiter, cost-tracker), configure my Telegram topic IDs for model routing, and restart the gateway."
+> "Install and configure hermes-kit for production hardening. Install all hooks (router, fallback, rate-limiter, cost-tracker, model-switch), configure my Telegram topic IDs for model routing, and restart the gateway."
 
 Or do it manually:
 
 ```bash
 pip install hermes-agent-kit
-hermes-kit install router fallback rate-limiter cost-tracker
+hermes-kit install router fallback rate-limiter cost-tracker model-switch
 hermes-kit gateway run --accept-hooks
 ```
 
@@ -30,7 +30,7 @@ hermes-kit gateway run --accept-hooks
 - [Quickstart](quickstart.md) — agent-driven and manual install
 - [Providers](providers.md) — supported AI providers and model lists
 - Manual setup per module:
-  - [Router](manual/router.md) — per-topic model routing
+  - [Router](manual/router.md) — per-topic model routing + `/route` command
   - [Fallback](manual/fallback.md) — automatic retry chains
   - [Rate Limiter](manual/rate-limiter.md) — per-user quotas
   - [Cost Tracker](manual/cost-tracker.md) — budget alerts
