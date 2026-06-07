@@ -76,7 +76,7 @@ hermes-kit router add 42 --model gpt-4o --provider openai
 hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
 ```
 
-Hermes resolves API keys from `~/.hermes/.env` (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.). See [providers guide](docs/providers.md) for all supported providers and model IDs.
+Hermes resolves API keys from `~/.hermes/.env` (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.). See [providers guide](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/providers.md) for all supported providers and model IDs.
 
 ### fallback — Automatic Fallback Chain
 
@@ -123,14 +123,14 @@ Set to `0` to disable alerts but continue tracking.
 
 ## Docs
 
-- [Quickstart](docs/quickstart.md) — agent-driven and manual install
-- [Providers](docs/providers.md) — supported AI providers and model lists
+- [Quickstart](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/quickstart.md) — agent-driven and manual install
+- [Providers](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/providers.md) — supported AI providers and model lists
 - Manual setup per module:
-  - [Router](docs/manual/router.md) — per-topic model routing
-  - [Fallback](docs/manual/fallback.md) — automatic retry chains
-  - [Rate Limiter](docs/manual/rate-limiter.md) — per-user quotas
-  - [Cost Tracker](docs/manual/cost-tracker.md) — budget alerts
-- [Troubleshooting](docs/troubleshooting.md) — common issues
+  - [Router](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/router.md) — per-topic model routing + `/route` command
+  - [Fallback](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/fallback.md) — automatic retry chains
+  - [Rate Limiter](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/rate-limiter.md) — per-user quotas
+  - [Cost Tracker](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/cost-tracker.md) — budget alerts
+- [Troubleshooting](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/troubleshooting.md) — common issues
 
 ## License
 
