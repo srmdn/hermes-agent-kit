@@ -1,6 +1,10 @@
 from typing import Optional
 import time
 
+
+class RateLimitExceeded(Exception):
+    """Raised when a session is rate-limited and the gateway should reject the request."""
+
 _model_overrides: dict[str, dict[str, Optional[str]]] = {}
 _fallback_chains: dict[str, list[str]] = {}
 _fallback_index: dict[str, int] = {}
@@ -145,6 +149,11 @@ def patch_gateway_resolver() -> None:
             model, runtime_kwargs = await original(self, *args, **kwargs)
             session_key = kwargs.get("session_key") or (args[0] if args else None)
             if session_key:
+                if is_rate_limited(session_key):
+                    raise RateLimitExceeded(
+                        f"Rate limit exceeded for session {session_key}. "
+                        f"Window resets on next session:start event."
+                    )
                 override = get_override(session_key)
                 if override:
                     model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
@@ -154,6 +163,11 @@ def patch_gateway_resolver() -> None:
             model, runtime_kwargs = original(self, *args, **kwargs)
             session_key = kwargs.get("session_key") or (args[0] if args else None)
             if session_key:
+                if is_rate_limited(session_key):
+                    raise RateLimitExceeded(
+                        f"Rate limit exceeded for session {session_key}. "
+                        f"Window resets on next session:start event."
+                    )
                 override = get_override(session_key)
                 if override:
                     model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
@@ -165,4 +179,4 @@ def patch_gateway_resolver() -> None:
 try:
     patch_gateway_resolver()
 except ImportError:
-    pass
+    pass  # Hermes not installed — bridge patches when CLI runs

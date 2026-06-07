@@ -1,3 +1,4 @@
+import importlib.metadata
 import shutil
 import sys
 from pathlib import Path
@@ -5,6 +6,13 @@ from pathlib import Path
 import yaml
 
 from hermes_kit.lib.hermes_api import get_hooks_dir
+
+
+def _get_version() -> str:
+    try:
+        return importlib.metadata.version("hermes-agent-kit")
+    except importlib.metadata.PackageNotFoundError:
+        return "dev"
 
 
 HOOKS_SRC = Path(__file__).parent / "hooks"
@@ -41,6 +49,20 @@ def install(hook_name: str) -> None:
     print(f"Installed '{hook_name}' → {dest}")
 
 
+def reinstall(hook_name: str) -> None:
+    dir_name = _hook_dirs.get(hook_name)
+    if not dir_name:
+        print(f"Unknown hook: {hook_name}. Available: {', '.join(AVAILABLE_HOOKS)}")
+        sys.exit(1)
+
+    src = HOOKS_SRC / dir_name
+    dest = Path(get_hooks_dir()) / hook_name
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(src, dest)
+    print(f"Reinstalled '{hook_name}' → {dest}")
+
+
 def doctor() -> None:
     hooks_dir = Path(get_hooks_dir())
     if not hooks_dir.exists():
@@ -72,10 +94,63 @@ def doctor() -> None:
     print("Done.")
 
 
+def status() -> None:
+    import subprocess
+    from hermes_kit import bridge
+
+    print(f"hermes-agent-kit v{_get_version()} (CLI: hermes-kit)")
+    print()
+
+    hooks_dir = Path(get_hooks_dir())
+    if hooks_dir.exists():
+        installed = [d.name for d in hooks_dir.iterdir() if d.is_dir() and (d / "handler.py").exists()]
+        print(f"Hooks: {len(installed)} installed")
+        for h in sorted(installed):
+            print(f"  {h}")
+    else:
+        print("Hooks: none installed")
+    print()
+
+    print("Bridge state:")
+    print(f"  Active model overrides: {len(bridge._model_overrides)}")
+    print(f"  Rate-limited sessions:  {len(bridge._rate_limited)}")
+    print(f"  Sessions cost-tracked:  {len(bridge._session_costs)}")
+    print(f"  Fallback chains:        {len(bridge._fallback_chains)}")
+    print()
+
+    try:
+        result = subprocess.run(["pgrep", "-f", "hermes.*gateway"], capture_output=True, text=True)
+        if result.returncode == 0:
+            pids = result.stdout.strip().split("\n")
+            print(f"Gateway: running ({len(pids)} process) — PID: {', '.join(pids)}")
+        else:
+            print("Gateway: not running")
+    except FileNotFoundError:
+        print("Gateway: unknown (pgrep not available)")
+
+
 def gateway_run() -> None:
     from hermes_kit.bridge import patch_gateway_resolver
 
-    patch_gateway_resolver()
+    version = _get_version()
+    print(f"[hermes-kit] v{version} — checking Hermes Agent...")
+
+    try:
+        import hermes_cli.main  # noqa: F401
+    except ImportError:
+        print("[hermes-kit] ERROR: Hermes Agent not found.")
+        print("[hermes-kit] Install it first, then run this command.")
+        print("[hermes-kit] See: https://github.com/NousResearch/hermes-agent")
+        sys.exit(1)
+
+    print(f"[hermes-kit] patching bridge...")
+
+    try:
+        patch_gateway_resolver()
+        print(f"[hermes-kit] bridge patched successfully.")
+    except ImportError:
+        print("[hermes-kit] WARNING: could not patch bridge — Hermes internals may have changed")
+        print("[hermes-kit] gateway will start but hooks will NOT override model routing")
 
     sys.argv = ["hermes", "gateway", "run"] + sys.argv[3:]
 
@@ -168,20 +243,48 @@ def _parse_flag(flag: str, args: list[str]) -> str | None:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: hermes-kit <install|doctor|list|gateway run|router>")
+        print("Usage: hermes-kit <install|reinstall|doctor|status|list|gateway run|router|version>")
         sys.exit(1)
 
     cmd = sys.argv[1]
 
-    if cmd == "install":
+    if cmd in ("--help", "-h", "help"):
+        print("Usage: hermes-kit <command> [args]")
+        print()
+        print("Commands:")
+        print("  install <hooks>        Install one or more hooks")
+        print("  reinstall <hooks>      Reinstall (overwrite) one or more hooks")
+        print("  doctor                 Check installed hooks health")
+        print("  status                 Show bridge state and gateway status")
+        print("  list                   List available hooks")
+        print("  gateway run            Run gateway with bridge auto-patched")
+        print("  router <subcommand>    Manage topic routing (add|remove|show|set-default)")
+        print("  version                Show version")
+        print()
+        print(f"Hooks: {', '.join(AVAILABLE_HOOKS)}")
+
+    elif cmd == "install":
         if len(sys.argv) < 3:
             print(f"Usage: hermes-kit install <hook> [<hook> ...]. Available: {', '.join(AVAILABLE_HOOKS)}")
             sys.exit(1)
         for hook_name in sys.argv[2:]:
             install(hook_name)
 
+    elif cmd == "reinstall":
+        if len(sys.argv) < 3:
+            print(f"Usage: hermes-kit reinstall <hook> [<hook> ...]. Available: {', '.join(AVAILABLE_HOOKS)}")
+            sys.exit(1)
+        for hook_name in sys.argv[2:]:
+            reinstall(hook_name)
+
+    elif cmd in ("--version", "version", "-v", "-V"):
+        print(f"hermes-agent-kit v{_get_version()} (CLI: hermes-kit)")
+
     elif cmd == "doctor":
         doctor()
+
+    elif cmd == "status":
+        status()
 
     elif cmd == "list":
         print("Available hooks:")

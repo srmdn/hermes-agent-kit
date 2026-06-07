@@ -1,6 +1,6 @@
 [project]
 name = "hermes-agent-kit"
-version = "0.2.2"
+version = "0.2.3"
 description = "Production hardening pack for Hermes Agent — per-topic model routing, fallback chains, rate limiting, and cost tracking via gateway hooks"
 readme = "README.md"
 license = {text = "MIT"}
@@ -27,6 +27,7 @@ addopts = "-v"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 "hermes_kit.hooks" = ["*.yaml", "**/*.yaml"]

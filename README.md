@@ -20,6 +20,15 @@ hermes-kit fills these gaps with production-grade hooks.
 pip install hermes-agent-kit
 ```
 
+> **🔵 Naming — same project, two names:**
+> | Context | Name |
+> |---------|------|
+> | PyPI / pip install | `hermes-agent-kit` |
+> | GitHub repo | [`srmdn/hermes-agent-kit`](https://github.com/srmdn/hermes-agent-kit) |
+> | CLI command | `hermes-kit` |
+>
+> Why the split? PyPI name matches the repo (`hermes-agent-kit`). The short CLI alias (`hermes-kit`) keeps commands terse — `hermes-kit install router` instead of `hermes-agent-kit install router`. Same project, same code, two names.
+
 ## Quickstart
 
 ```bash
@@ -99,7 +108,7 @@ limits:
       max_messages_per_window: 50
 ```
 
-> ⚠️ Rate limiter currently tracks usage but does not block messages. Enforcement is planned for an upcoming release.
+> Rate limiter enforces limits at the bridge level — exceeding users get `RateLimitExceeded` on every request until their window resets. Set `window_seconds` to control reset timing.
 
 ### cost-tracker — Real-Time Cost Tracking
 
