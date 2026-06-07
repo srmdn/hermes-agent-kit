@@ -17,7 +17,7 @@ Send a message to your bot. The bot's logs will show the chat ID.
 ### Method 2: Check Hermes gateway logs
 
 ```bash
-hermes gateway logs | grep "chat_id"
+hermes logs | grep "chat_id"
 ```
 
 ### Method 3: Use @userinfobot on Telegram

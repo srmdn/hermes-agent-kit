@@ -2,7 +2,7 @@
 
 hermes-kit works with any provider Hermes supports. Your hooks route messages to any model, any provider.
 
-## opencode-go (17 models)
+## opencode-go (11 models)
 
 Hermes has native `opencode-go` support. Set in `config.yaml`:
 

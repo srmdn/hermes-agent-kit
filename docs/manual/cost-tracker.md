@@ -44,7 +44,7 @@ opencode-go model pricing is passed through from the underlying provider. A `ope
 During development, check session costs:
 
 ```bash
-hermes gateway logs | grep "hermes-kit.*cost"
+hermes logs | grep "hermes-kit.*cost"
 ```
 
 Or inspect the bridge state directly:

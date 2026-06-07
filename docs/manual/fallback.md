@@ -21,7 +21,7 @@ chains:
 
 Models are tried in order. If `deepseek-v4-pro` fails → try `claude-sonnet-4` → try `gpt-4o` → try `gpt-4o-mini`.
 
-> ⚠️ The fallback chain uses your configured provider for all models. Cross-provider fallback (e.g. opencode-go → OpenAI) is not yet supported.
+> All models in the chain must use the same provider. The examples above all use `opencode-go` — this is same-provider fallback and is fully supported. To switch providers per topic (e.g. opencode-go for coding, OpenAI for general chat), use [multi-provider routing](router.md) instead.
 
 ## Best Practices
 
