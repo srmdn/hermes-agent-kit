@@ -55,7 +55,7 @@ Route Telegram topics to different AI models. Finance chat uses Qwen, coding cha
 
 **Via CLI:**
 ```bash
-hermes-kit router set-default --model opencode-go/gpt-4o-mini
+hermes-kit router set-default --model opencode-go/qwen-3.6-plus
 hermes-kit router add 42 --model opencode-go/deepseek-v4-pro
 hermes-kit router show
 ```
@@ -63,7 +63,7 @@ hermes-kit router show
 **Via YAML** (`~/.hermes/hooks/router/topic_router.yaml`):
 ```yaml
 default:
-  model: "opencode-go/gpt-4o-mini"
+  model: "opencode-go/qwen-3.6-plus"
 
 topics:
   "42":
@@ -87,8 +87,8 @@ Define a chain of models to try when the primary fails.
 chains:
   global:
     - "opencode-go/deepseek-v4-pro"     # primary
-    - "opencode-go/claude-sonnet-4"      # fallback
-    - "opencode-go/gpt-4o-mini"          # last resort
+    - "opencode-go/kimi-k2.6"      # fallback
+    - "opencode-go/qwen-3.6-plus"          # last resort
 ```
 
 After a failure, call `hermes_kit.bridge.retry_with_fallback(session_key)` to advance to the next model.

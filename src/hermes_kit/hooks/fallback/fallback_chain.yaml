@@ -1,5 +1,5 @@
 chains:
   global:
     - "opencode-go/deepseek-v4-pro"
-    - "opencode-go/claude-sonnet-4"
-    - "opencode-go/gpt-4o-mini"
+    - "opencode-go/kimi-k2.6"
+    - "opencode-go/qwen-3.6-plus"

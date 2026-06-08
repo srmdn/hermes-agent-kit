@@ -29,7 +29,7 @@ Set to `0` to disable alerts but continue tracking.
 | `deepseek-reasoner` | $0.55 | $2.19 |
 | `qwen-3.6-plus` | $0.40 | $0.80 |
 
-opencode-go model pricing is passed through from the underlying provider. A `opencode-go/gpt-4o` request costs the same as calling OpenAI directly.
+OpenCode Go pricing is flat-rate via subscription ($10/month). See [openCode Go](https://opencode.ai/go) for current plans. For direct OpenAI/Anthropic providers, pricing matches the table above.
 
 ## Example Thresholds
 

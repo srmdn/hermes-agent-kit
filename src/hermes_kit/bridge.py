@@ -101,12 +101,20 @@ def get_user_topic(user_id: str) -> str | None:
 
 
 _session_costs: dict[str, dict[str, float]] = {}
+# Approximate per-1M-token pricing for OpenCode Go models.
+# Go is flat-rate subscription ($10/month), not per-token.
+# These prices are estimates for cost-tracking purposes only.
 _cost_pricing: dict[str, tuple[float, float]] = {
-    "gpt-4o": (2.50, 10.00),
-    "gpt-4o-mini": (0.15, 0.60),
-    "claude-sonnet-4": (3.00, 15.00),
-    "deepseek-chat": (0.14, 0.28),
+    "deepseek-v4-pro": (0.55, 2.19),
+    "deepseek-v4-flash": (0.20, 0.40),
     "qwen-3.6-plus": (0.40, 0.80),
+    "qwen-3.7-plus": (0.50, 1.00),
+    "kimi-k2.6": (0.40, 0.80),
+    "kimi-k2.5": (0.35, 0.70),
+    "minimax-m2.7": (0.30, 0.60),
+    "minimax-m3": (0.40, 0.80),
+    "mimo-v2.5": (0.30, 0.60),
+    "glm-5.1": (0.40, 0.80),
 }
 
 

@@ -2,7 +2,9 @@
 
 hermes-kit works with any provider Hermes supports. Your hooks route messages to any model, any provider.
 
-## opencode-go (11 models)
+> **OpenCode Go models are open-source only.** For OpenAI (GPT-4o), Anthropic (Claude), or Google (Gemini) models, use the respective provider section below. You'll need your own API keys.
+
+## opencode-go (14 models)
 
 Hermes has native `opencode-go` support. Set in `config.yaml`:
 
@@ -19,17 +21,20 @@ Base URL: `https://opencode.ai/zen/go/v1` (auto-configured)
 
 | Model ID | Best For | Notes |
 |---|---|---|
-| `opencode-go/deepseek-v4-pro` | General purpose, logic | Current flagship |
-| `opencode-go/kimi-k2.6` | Long context, research | Up to 128K tokens |
-| `opencode-go/qwen-3.6-plus` | Coding, reasoning | Strong at code generation |
-| `opencode-go/claude-sonnet-4` | Complex reasoning | Anthropic-compatible endpoint |
-| `opencode-go/gpt-4o` | General purpose | OpenAI-compatible |
-| `opencode-go/gpt-4o-mini` | Fast, cheap | Default for low-cost routing |
-| `opencode-go/glm-4.5` | Chinese language | Bilingual |
-| `opencode-go/minimax-m2.7` | Long context | Anthropic-compatible |
-| `opencode-go/mimo-v2` | Multimodal | Image understanding |
-| `opencode-go/gemini-2.5-flash` | Speed | Fastest response times |
-| `opencode-go/gemini-2.5-pro` | Deep reasoning | Google's flagship |
+| `opencode-go/deepseek-v4-pro` | General purpose, logic | DeepSeek V4 Pro — flagship |
+| `opencode-go/deepseek-v4-flash` | Fast responses | DeepSeek V4 Flash |
+| `opencode-go/kimi-k2.6` | Long context, research | Kimi K2.6 — up to 128K tokens |
+| `opencode-go/kimi-k2.5` | Long context | Kimi K2.5 |
+| `opencode-go/qwen-3.7-max` | General purpose | Qwen3.7 Max |
+| `opencode-go/qwen-3.7-plus` | Balanced performance | Qwen3.7 Plus |
+| `opencode-go/qwen-3.6-plus` | Coding, reasoning | Qwen3.6 Plus |
+| `opencode-go/minimax-m2.7` | Long context | MiniMax M2.7 |
+| `opencode-go/minimax-m2.5` | General purpose | MiniMax M2.5 |
+| `opencode-go/minimax-m3` | Latest generation | MiniMax M3 |
+| `opencode-go/mimo-v2.5-pro` | Multimodal, vision | MiMo-V2.5-Pro |
+| `opencode-go/mimo-v2.5` | Multimodal | MiMo-V2.5 |
+| `opencode-go/glm-5.1` | Bilingual (EN/ZH) | GLM-5.1 |
+| `opencode-go/glm-5` | Bilingual (EN/ZH) | GLM-5 |
 
 Check [opencode.ai/models](https://opencode.ai/models) for the full current list.
 

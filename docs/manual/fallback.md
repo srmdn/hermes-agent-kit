@@ -14,12 +14,12 @@ Edit `~/.hermes/hooks/fallback/fallback_chain.yaml`:
 chains:
   global:
     - "opencode-go/deepseek-v4-pro"     # primary
-    - "opencode-go/claude-sonnet-4"      # first fallback
-    - "opencode-go/gpt-4o"               # second fallback
-    - "opencode-go/gpt-4o-mini"          # last resort
+    - "opencode-go/kimi-k2.6"            # first fallback
+    - "opencode-go/qwen-3.6-plus"        # second fallback
+    - "opencode-go/deepseek-v4-flash"    # last resort
 ```
 
-Models are tried in order. If `deepseek-v4-pro` fails → try `claude-sonnet-4` → try `gpt-4o` → try `gpt-4o-mini`.
+Models are tried in order. If `deepseek-v4-pro` fails → try `kimi-k2.6` → try `qwen-3.6-plus` → try `deepseek-v4-flash`.
 
 > All models in the chain must use the same provider. The examples above all use `opencode-go` — this is same-provider fallback and is fully supported. To switch providers per topic (e.g. opencode-go for coding, OpenAI for general chat), use [multi-provider routing](router.md) instead.
 
@@ -36,9 +36,9 @@ Put cheaper models last:
 ```yaml
 chains:
   global:
-    - "opencode-go/gpt-4o"               # $2.50/$10.00 per 1M
-    - "opencode-go/claude-sonnet-4"      # $3.00/$15.00
-    - "opencode-go/gpt-4o-mini"          # $0.15/$0.60 — cheap safety net
+    - "opencode-go/deepseek-v4-pro"       # primary
+    - "opencode-go/kimi-k2.6"             # first fallback
+    - "opencode-go/qwen-3.6-plus"         # last resort — fast and cheap
 ```
 
 ### Chain Length
@@ -63,7 +63,7 @@ Test by temporarily using an invalid model as primary — the fallback should ki
 chains:
   global:
     - "opencode-go/nonexistent-model"    # will fail
-    - "opencode-go/gpt-4o-mini"          # should be used instead
+    - "opencode-go/deepseek-v4-flash"    # should be used instead
 ```
 
-Restart gateway and send a message. The response should come from `gpt-4o-mini`.
+Restart gateway and send a message. The response should come from `deepseek-v4-flash`.

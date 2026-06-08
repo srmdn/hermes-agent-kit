@@ -1,5 +1,5 @@
 default:
-  model: "opencode-go/gpt-4o-mini"
+  model: "opencode-go/qwen-3.6-plus"
 
 topics: {}
 #   "42":

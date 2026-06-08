@@ -34,7 +34,7 @@ Instead of editing YAML directly, manage routes from the terminal:
 
 ```bash
 # Set default model
-hermes-kit router set-default --model opencode-go/gpt-4o-mini
+hermes-kit router set-default --model opencode-go/qwen-3.6-plus
 
 # Add topic mappings
 hermes-kit router add 42 --model opencode-go/deepseek-v4-pro
@@ -66,14 +66,14 @@ hermes-kit install model-switch
 
 | Command | What it does |
 |---------|-------------|
-| `/route gpt-4o` | Switch this topic to GPT-4o |
+| `/route deepseek-v4-pro` | Switch this topic to deepseek-v4-pro |
 | `/route show` | Show current routing for this topic |
-| `/route default claude-sonnet-4` | Set the default model for unmapped topics |
+| `/route default qwen-3.6-plus` | Set the default model for unmapped topics |
 | `/route reset` | Remove routing for this topic (fall back to default) |
 
 ### How it works
 
-1. User sends `/route gpt-4o` in a Telegram DM or group topic
+1. User sends `/route deepseek-v4-pro` in a Telegram DM or group topic
 2. Model-switch hook fires, updates `topic_router.yaml` with the new mapping
 3. Next `session:start` (next message), the router hook picks up the change
 
@@ -92,7 +92,7 @@ Edit `~/.hermes/hooks/router/topic_router.yaml`:
 
 ```yaml
 default:
-  model: "opencode-go/gpt-4o-mini"      # cheap fallback for unknown chats
+  model: "opencode-go/qwen-3.6-plus"      # fast default for unknown chats
 
 topics:
   "123456789":                           # your DM chat ID
@@ -122,7 +122,7 @@ Route specific topics to different AI providers. API keys are resolved from `~/.
 
 ```yaml
 default:
-  model: "opencode-go/gpt-4o-mini"    # uses OPENCODE_GO_API_KEY
+  model: "opencode-go/qwen-3.6-plus"    # uses OPENCODE_GO_API_KEY
 
 topics:
   "42":
@@ -138,7 +138,7 @@ topics:
 
 Via CLI:
 ```bash
-hermes-kit router set-default --model opencode-go/gpt-4o-mini
+hermes-kit router set-default --model opencode-go/qwen-3.6-plus
 hermes-kit router add 42 --model gpt-4o --provider openai
 hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
 ```
@@ -153,11 +153,11 @@ You run a Telegram group with three topics:
 |---|---|---|---|
 | #finance | Stock analysis | `opencode-go/qwen-3.6-plus` | Good enough, cheaper |
 | #coding | Code reviews | `opencode-go/deepseek-v4-pro` | Best at code |
-| #general | Casual chat | `opencode-go/gpt-4o-mini` | Cheapest, fast |
+| #general | Casual chat | `opencode-go/deepseek-v4-flash` | Cheapest, fast |
 
 ```yaml
 default:
-  model: "opencode-go/gpt-4o-mini"
+  model: "opencode-go/deepseek-v4-flash"
 
 topics:
   "42":      # #finance
@@ -166,7 +166,7 @@ topics:
     model: "opencode-go/deepseek-v4-pro"
 ```
 
-Topics #general and anything else fall back to `gpt-4o-mini`.
+Topics #general and anything else fall back to `deepseek-v4-flash`.
 
 ## Verification
 
