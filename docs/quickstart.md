@@ -1,5 +1,15 @@
 # Quickstart
 
+## Before You Begin
+
+**hermes-kit is a plugin — Hermes must work first.**
+
+1. [Install Hermes Agent](https://github.com/NousResearch/hermes-agent) v0.16+
+2. Configure a model and provider (see [Prerequisites](#prerequisites) in README)
+3. Set up your gateway (Telegram, Discord, etc.)
+4. **Verify**: send a test message → gateway responds with correct model
+5. Only then install hermes-kit hooks
+
 ## Agent-Driven (Recommended)
 
 Paste this to your Hermes agent and let it handle everything:
@@ -40,6 +50,18 @@ fallback: HOOK.yaml ✓ handler.py ✓
 rate-limiter: HOOK.yaml ✓ handler.py ✓
 cost-tracker: HOOK.yaml ✓ handler.py ✓
 model-switch: HOOK.yaml ✓ handler.py ✓
+```
+
+### Gateway Management
+
+```bash
+# Start (with hooks)
+hermes-kit gateway run --accept-hooks
+
+# Stop — press Ctrl+C
+
+# Check status
+hermes-kit status
 ```
 
 ### Next Steps

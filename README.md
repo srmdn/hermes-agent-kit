@@ -12,7 +12,56 @@ hermes-kit fills these gaps with production-grade hooks.
 
 - Python ≥ 3.11
 - [Hermes Agent](https://github.com/NousResearch/hermes-agent) v0.16.0 (pinned)
+- **Hermes configured with a working model + provider** — hermes-kit is a plugin, not standalone. Hermes must be able to respond to messages BEFORE installing hooks.
 - A configured gateway (Telegram, Discord, etc.)
+
+### Verify Hermes works first
+
+> **Critical**: hermes-kit won't fix a broken Hermes setup. Make sure your gateway responds to messages with the model you want BEFORE installing hooks.
+
+```bash
+# Set your model (pick one from opencode-go)
+hermes /model opencode-go/mimo-v2.5-pro
+
+# Or via config.yaml at ~/.hermes/config.yaml:
+cat > ~/.hermes/config.yaml << 'EOF'
+model:
+  default: opencode-go/mimo-v2.5-pro
+  provider: opencode-go
+
+providers:
+  opencode-go:
+    api_key: OPENCODE_GO_API_KEY
+    base_url: https://opencode.ai/zen/go/v1
+EOF
+
+# Ensure API keys in ~/.hermes/.env
+echo "OPENCODE_GO_API_KEY=sk-..." >> ~/.hermes/.env
+echo "GATEWAY_ALLOW_ALL_USERS=true" >> ~/.hermes/.env
+
+# Start gateway
+hermes gateway run
+
+# Send a test message on Telegram → verify you get a response
+# Only then install hermes-kit
+```
+
+### Gateway Management
+
+```bash
+# Start (with hooks)
+hermes-kit gateway run --accept-hooks
+
+# Stop
+# Press Ctrl+C in the terminal running the gateway
+
+# Restart after config changes
+# Ctrl+C then:
+hermes-kit gateway run --accept-hooks
+
+# Check status
+hermes-kit status
+```
 
 ## Install
 
@@ -55,7 +104,7 @@ Route Telegram topics to different AI models. Finance chat uses Qwen, coding cha
 
 **Via CLI:**
 ```bash
-hermes-kit router set-default --model opencode-go/qwen-3.6-plus
+hermes-kit router set-default --model opencode-go/qwen3.6-plus
 hermes-kit router add 42 --model opencode-go/deepseek-v4-pro
 hermes-kit router show
 ```
@@ -63,7 +112,7 @@ hermes-kit router show
 **Via YAML** (`~/.hermes/hooks/router/topic_router.yaml`):
 ```yaml
 default:
-  model: "opencode-go/qwen-3.6-plus"
+  model: "opencode-go/qwen3.6-plus"
 
 topics:
   "42":
@@ -88,7 +137,7 @@ chains:
   global:
     - "opencode-go/deepseek-v4-pro"     # primary
     - "opencode-go/kimi-k2.6"      # fallback
-    - "opencode-go/qwen-3.6-plus"          # last resort
+    - "opencode-go/qwen3.6-plus"          # last resort
 ```
 
 After a failure, call `hermes_kit.bridge.retry_with_fallback(session_key)` to advance to the next model.

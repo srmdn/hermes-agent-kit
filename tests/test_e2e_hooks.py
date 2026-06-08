@@ -142,7 +142,7 @@ class TestCostTrackerHookE2E:
     def test_agent_step_tracks_cost(self):
         ctx = make_context(
             usage={"prompt_tokens": 1000, "completion_tokens": 500},
-            model="qwen-3.6-plus",
+            model="qwen3.6-plus",
         )
 
         asyncio.run(cost_tracker_handle("agent:step", ctx))
@@ -154,7 +154,7 @@ class TestCostTrackerHookE2E:
         ctx = make_context()
         session_key = ctx["session_key"]
 
-        bridge.track_cost(session_key, "qwen-3.6-plus", 1000, 500)
+        bridge.track_cost(session_key, "qwen3.6-plus", 1000, 500)
 
         with patch(THRESHOLD, 0.0):
             asyncio.run(cost_tracker_handle("agent:end", ctx))

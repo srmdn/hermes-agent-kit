@@ -1,5 +1,39 @@
 # Troubleshooting
 
+## Provider authentication failed
+
+**Symptom:** `Provider authentication failed. Check the configured credentials.`
+
+**Root cause:** Hermes doesn't have a working model + provider. hermes-kit hooks can't fix this — they only route models that Hermes already knows about.
+
+**Fix — configure Hermes first, then install hooks:**
+
+```bash
+# 1. Set a model that actually exists on your provider
+hermes /model opencode-go/mimo-v2.5-pro
+
+# 2. Configure the provider with API key
+cat > ~/.hermes/config.yaml << 'EOF'
+model:
+  default: opencode-go/mimo-v2.5-pro
+  provider: opencode-go
+
+providers:
+  opencode-go:
+    api_key: OPENCODE_GO_API_KEY
+    base_url: https://opencode.ai/zen/go/v1
+EOF
+
+# 3. Add API key to .env
+echo "OPENCODE_GO_API_KEY=sk-..." >> ~/.hermes/.env
+
+# 4. Restart and verify Hermes works alone
+hermes gateway run
+# Send a test message. Only then install hermes-kit.
+```
+
+> **OpenCode Go specifically**: Only open-source models. See [providers guide](../providers.md) for the full model list. `gpt-4o` and `claude-sonnet-4` are NOT on opencode-go.
+
 ## Hook not loading
 
 **Symptom:** `hermes-kit doctor` shows hooks but Hermes doesn't load them.

@@ -11,6 +11,8 @@ Self-hosted Hermes gateways hit walls when serving multiple users:
 
 hermes-kit fills these gaps with production-grade hooks — no core Hermes changes needed.
 
+> **Prerequisites**: Hermes must be configured with a working model and provider. hermes-kit is a plugin, not standalone. See [README](https://github.com/srmdn/hermes-agent-kit#prerequisites) for setup.
+
 ## Quickstart
 
 Paste this to your Hermes agent:

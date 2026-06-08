@@ -15,11 +15,11 @@ chains:
   global:
     - "opencode-go/deepseek-v4-pro"     # primary
     - "opencode-go/kimi-k2.6"            # first fallback
-    - "opencode-go/qwen-3.6-plus"        # second fallback
+    - "opencode-go/qwen3.6-plus"        # second fallback
     - "opencode-go/deepseek-v4-flash"    # last resort
 ```
 
-Models are tried in order. If `deepseek-v4-pro` fails → try `kimi-k2.6` → try `qwen-3.6-plus` → try `deepseek-v4-flash`.
+Models are tried in order. If `deepseek-v4-pro` fails → try `kimi-k2.6` → try `qwen3.6-plus` → try `deepseek-v4-flash`.
 
 > All models in the chain must use the same provider. The examples above all use `opencode-go` — this is same-provider fallback and is fully supported. To switch providers per topic (e.g. opencode-go for coding, OpenAI for general chat), use [multi-provider routing](router.md) instead.
 
@@ -38,7 +38,7 @@ chains:
   global:
     - "opencode-go/deepseek-v4-pro"       # primary
     - "opencode-go/kimi-k2.6"             # first fallback
-    - "opencode-go/qwen-3.6-plus"         # last resort — fast and cheap
+    - "opencode-go/qwen3.6-plus"         # last resort — fast and cheap
 ```
 
 ### Chain Length

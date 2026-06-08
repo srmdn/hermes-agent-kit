@@ -101,20 +101,25 @@ def get_user_topic(user_id: str) -> str | None:
 
 
 _session_costs: dict[str, dict[str, float]] = {}
-# Approximate per-1M-token pricing for OpenCode Go models.
-# Go is flat-rate subscription ($10/month), not per-token.
-# These prices are estimates for cost-tracking purposes only.
 _cost_pricing: dict[str, tuple[float, float]] = {
-    "deepseek-v4-pro": (0.55, 2.19),
-    "deepseek-v4-flash": (0.20, 0.40),
-    "qwen-3.6-plus": (0.40, 0.80),
-    "qwen-3.7-plus": (0.50, 1.00),
-    "kimi-k2.6": (0.40, 0.80),
-    "kimi-k2.5": (0.35, 0.70),
-    "minimax-m2.7": (0.30, 0.60),
-    "minimax-m3": (0.40, 0.80),
-    "mimo-v2.5": (0.30, 0.60),
-    "glm-5.1": (0.40, 0.80),
+    # Approximate per-1M-token pricing for OpenCode Go models.
+    # Go is flat-rate subscription ($10/month), not per-token.
+    # These prices are estimates for cost-tracking purposes only.
+    # Source: https://opencode.ai/docs/go/ (June 2026)
+    "deepseek-v4-pro": (1.74, 3.48),
+    "deepseek-v4-flash": (0.14, 0.28),
+    "qwen3.6-plus": (0.50, 3.00),
+    "qwen3.7-plus": (0.40, 1.60),
+    "qwen3.7-max": (2.50, 7.50),
+    "kimi-k2.6": (0.95, 4.00),
+    "kimi-k2.5": (0.60, 3.00),
+    "minimax-m2.7": (0.30, 1.20),
+    "minimax-m2.5": (0.30, 1.20),
+    "minimax-m3": (0.30, 1.20),
+    "mimo-v2.5": (0.14, 0.28),
+    "mimo-v2.5-pro": (1.74, 3.48),
+    "glm-5.1": (1.40, 4.40),
+    "glm-5": (1.00, 3.20),
 }
 
 

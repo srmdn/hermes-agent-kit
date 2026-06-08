@@ -138,17 +138,17 @@ class TestCostFunctions:
         bridge._session_costs.clear()
 
     def test_track_cost_adds_entry(self):
-        bridge.track_cost("s1", "qwen-3.6-plus", 1000, 500)
+        bridge.track_cost("s1", "qwen3.6-plus", 1000, 500)
         assert "s1" in bridge._session_costs
-        assert "qwen-3.6-plus" in bridge._session_costs["s1"]
-        assert bridge._session_costs["s1"]["qwen-3.6-plus"] > 0
+        assert "qwen3.6-plus" in bridge._session_costs["s1"]
+        assert bridge._session_costs["s1"]["qwen3.6-plus"] > 0
 
     def test_track_cost_unknown_model_zero_cost(self):
         bridge.track_cost("s1", "unknown-model", 1000, 500)
         assert bridge._session_costs["s1"]["unknown-model"] == 0.0
 
     def test_get_session_cost_sums_all_models(self):
-        bridge.track_cost("s1", "qwen-3.6-plus", 1_000_000, 500_000)
+        bridge.track_cost("s1", "qwen3.6-plus", 1_000_000, 500_000)
         cost = bridge.get_session_cost("s1")
         assert cost > 0
 
@@ -156,12 +156,12 @@ class TestCostFunctions:
         assert bridge.get_session_cost("nonexistent") == 0.0
 
     def test_get_session_cost_breakdown(self):
-        bridge.track_cost("s1", "qwen-3.6-plus", 1000, 500)
+        bridge.track_cost("s1", "qwen3.6-plus", 1000, 500)
         breakdown = bridge.get_session_cost_breakdown("s1")
-        assert "qwen-3.6-plus" in breakdown
+        assert "qwen3.6-plus" in breakdown
 
     def test_reset_session_cost(self):
-        bridge.track_cost("s1", "qwen-3.6-plus", 1000, 500)
+        bridge.track_cost("s1", "qwen3.6-plus", 1000, 500)
         bridge.reset_session_cost("s1")
         assert bridge.get_session_cost("s1") == 0.0
 

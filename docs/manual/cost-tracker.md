@@ -20,16 +20,24 @@ Set to `0` to disable alerts but continue tracking.
 
 | Model | Input Price | Output Price |
 |---|---|---|
-| `gpt-4o` | $2.50 | $10.00 |
-| `gpt-4o-mini` | $0.15 | $0.60 |
-| `o3` | $10.00 | $40.00 |
-| `claude-sonnet-4` | $3.00 | $15.00 |
-| `claude-opus-4` | $15.00 | $75.00 |
-| `deepseek-chat` | $0.14 | $0.28 |
-| `deepseek-reasoner` | $0.55 | $2.19 |
-| `qwen-3.6-plus` | $0.40 | $0.80 |
+| opencode-go models | Flat-rate subscription ($10/mo) | See [Go plan](https://opencode.ai/go) |
+| gpt-5.5 | $5.00 | $30.00 |
+| gpt-5.4 | $2.50 | $15.00 |
+| gpt-5.4-mini | $0.75 | $4.50 |
+| o3 | $10.00 | $40.00 |
+| claude-opus-4-8 | $5.00 | $25.00 |
+| claude-sonnet-4-6 | $3.00 | $15.00 |
+| claude-haiku-4-5 | $1.00 | $5.00 |
+| grok-4.3 | $1.25 | $2.50 |
+| grok-build-0.1 | $1.00 | $2.00 |
+| deepseek-v4-pro | $1.74 | $3.48 |
+| deepseek-v4-flash | $0.14 | $0.28 |
+| qwen3.6-plus (via opencode-go) | $0.50 | $3.00 |
+| kimi-k2.6 (via opencode-go) | $0.95 | $4.00 |
+| gemini-3.5-flash | Free tier / pay-as-you-go | See [Google](https://ai.google.dev/pricing) |
+| gemini-3.1-pro | Free tier / pay-as-you-go | See [Google](https://ai.google.dev/pricing) |
 
-OpenCode Go pricing is flat-rate via subscription ($10/month). See [openCode Go](https://opencode.ai/go) for current plans. For direct OpenAI/Anthropic providers, pricing matches the table above.
+> OpenCode Go pricing is flat-rate via subscription ($10/month). See [OpenCode Go](https://opencode.ai/go) for current plans. For direct OpenAI/Anthropic/xAI providers, pricing matches the table above.
 
 ## Example Thresholds
 

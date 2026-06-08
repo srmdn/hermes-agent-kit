@@ -34,11 +34,11 @@ Instead of editing YAML directly, manage routes from the terminal:
 
 ```bash
 # Set default model
-hermes-kit router set-default --model opencode-go/qwen-3.6-plus
+hermes-kit router set-default --model opencode-go/qwen3.6-plus
 
 # Add topic mappings
 hermes-kit router add 42 --model opencode-go/deepseek-v4-pro
-hermes-kit router add 7 --model opencode-go/qwen-3.6-plus
+hermes-kit router add 7 --model opencode-go/qwen3.6-plus
 
 # Route to a different provider
 hermes-kit router add 42 --model gpt-4o --provider openai
@@ -68,7 +68,7 @@ hermes-kit install model-switch
 |---------|-------------|
 | `/route deepseek-v4-pro` | Switch this topic to deepseek-v4-pro |
 | `/route show` | Show current routing for this topic |
-| `/route default qwen-3.6-plus` | Set the default model for unmapped topics |
+| `/route default qwen3.6-plus` | Set the default model for unmapped topics |
 | `/route reset` | Remove routing for this topic (fall back to default) |
 
 ### How it works
@@ -92,13 +92,13 @@ Edit `~/.hermes/hooks/router/topic_router.yaml`:
 
 ```yaml
 default:
-  model: "opencode-go/qwen-3.6-plus"      # fast default for unknown chats
+  model: "opencode-go/qwen3.6-plus"      # fast default for unknown chats
 
 topics:
   "123456789":                           # your DM chat ID
     model: "opencode-go/deepseek-v4-pro"
   "-1001234567890":                      # group or channel
-    model: "opencode-go/qwen-3.6-plus"
+    model: "opencode-go/qwen3.6-plus"
   "42":                                  # topic thread within a group
     model: "opencode-go/kimi-k2.6"
 ```
@@ -122,7 +122,7 @@ Route specific topics to different AI providers. API keys are resolved from `~/.
 
 ```yaml
 default:
-  model: "opencode-go/qwen-3.6-plus"    # uses OPENCODE_GO_API_KEY
+  model: "opencode-go/qwen3.6-plus"    # uses OPENCODE_GO_API_KEY
 
 topics:
   "42":
@@ -138,7 +138,7 @@ topics:
 
 Via CLI:
 ```bash
-hermes-kit router set-default --model opencode-go/qwen-3.6-plus
+hermes-kit router set-default --model opencode-go/qwen3.6-plus
 hermes-kit router add 42 --model gpt-4o --provider openai
 hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
 ```
@@ -151,7 +151,7 @@ You run a Telegram group with three topics:
 
 | Topic | Use Case | Model | Why |
 |---|---|---|---|
-| #finance | Stock analysis | `opencode-go/qwen-3.6-plus` | Good enough, cheaper |
+| #finance | Stock analysis | `opencode-go/qwen3.6-plus` | Good enough, cheaper |
 | #coding | Code reviews | `opencode-go/deepseek-v4-pro` | Best at code |
 | #general | Casual chat | `opencode-go/deepseek-v4-flash` | Cheapest, fast |
 
@@ -161,7 +161,7 @@ default:
 
 topics:
   "42":      # #finance
-    model: "opencode-go/qwen-3.6-plus"
+    model: "opencode-go/qwen3.6-plus"
   "7":       # #coding
     model: "opencode-go/deepseek-v4-pro"
 ```

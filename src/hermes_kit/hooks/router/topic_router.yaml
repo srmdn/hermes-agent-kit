@@ -1,6 +1,6 @@
 default:
-  model: "opencode-go/qwen-3.6-plus"
+  model: "opencode-go/qwen3.6-plus"
 
 topics: {}
 #   "42":
-#     model: "opencode-go/qwen-3.6-plus"  #   profile: "finance"
+#     model: "opencode-go/qwen3.6-plus"  #   profile: "finance"
