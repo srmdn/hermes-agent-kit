@@ -198,7 +198,21 @@ def patch_gateway_resolver() -> None:
     GatewayRunner._resolve_session_agent_runtime = patched_resolver
 
 
+def patch_known_commands() -> None:
+    try:
+        from hermes_cli.commands import GATEWAY_KNOWN_COMMANDS  # noqa: F811
+    except ImportError:
+        return
+
+    model = __import__("hermes_cli.commands", fromlist=["GATEWAY_KNOWN_COMMANDS"])
+    if "route" not in model.GATEWAY_KNOWN_COMMANDS:
+        model.GATEWAY_KNOWN_COMMANDS = frozenset(
+            list(model.GATEWAY_KNOWN_COMMANDS) + ["route"]
+        )
+
+
 try:
     patch_gateway_resolver()
+    patch_known_commands()
 except ImportError:
     pass  # Hermes not installed — bridge patches when CLI runs
