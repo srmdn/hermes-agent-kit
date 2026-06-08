@@ -19,10 +19,7 @@ def _extract_routing_id(context: dict) -> str | None:
         return None
 
     parts = session_key.split(":")
-    if len(parts) >= 5:
-        return parts[4]
-
-    return chat_id
+    return parts[-1] if len(parts) >= 5 else chat_id
 
 
 async def handle(event_type: str, context: dict) -> None:

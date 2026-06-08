@@ -149,7 +149,7 @@ class TestBridgeTracking:
                         import asyncio
 
                         asyncio.run(handle("session:start", ctx))
-                        mock_track.assert_called_once_with("111", "111")
+                        mock_track.assert_called_once_with("111", "222")
 
     def test_no_tracking_when_missing_user_id(self):
         ctx = {
@@ -165,3 +165,70 @@ class TestBridgeTracking:
 
                         asyncio.run(handle("session:start", ctx))
                         mock_track.assert_not_called()
+
+
+class TestGroupSessionKeyParsing:
+    def test_group_with_topic_uses_thread_id(self):
+        ctx = {
+            "session_key": "agent:main:telegram:group:-1003701036521:17585",
+            "chat_id": "-1003701036521",
+            "user_id": "12345",
+            "platform": "telegram",
+        }
+        with patch(ROUTING, {}):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE) as mock_set:
+                    import asyncio
+
+                    asyncio.run(handle("session:start", ctx))
+                    mock_set.assert_called_once()
+                    assert mock_set.call_args[0][0] == ctx["session_key"]
+                    assert mock_set.call_args[1]["model"] == "gpt-4o"
+
+    def test_group_per_user_uses_user_id(self):
+        ctx = {
+            "session_key": "agent:main:telegram:group:-1003701036521:12345",
+            "chat_id": "-1003701036521",
+            "user_id": "12345",
+            "platform": "telegram",
+        }
+        with patch(ROUTING, {}):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE) as mock_set:
+                    import asyncio
+
+                    asyncio.run(handle("session:start", ctx))
+                    mock_set.assert_called_once()
+
+    def test_group_with_topic_routes_correct_routing_id(self):
+        ctx = {
+            "session_key": "agent:main:telegram:group:-100:17585",
+            "chat_id": "-100",
+            "user_id": "12345",
+            "platform": "telegram",
+        }
+        ROUTING_WITH_TOPIC = {"17585": {"model": "claude-sonnet-4"}}
+        with patch(ROUTING, ROUTING_WITH_TOPIC):
+            with patch(DEFAULT, {"model": "gpt-4o"}):
+                with patch(SET_OVERRIDE) as mock_set:
+                    import asyncio
+
+                    asyncio.run(handle("session:start", ctx))
+                    mock_set.assert_called_once()
+                    assert mock_set.call_args[1]["model"] == "claude-sonnet-4"
+
+    def test_dm_session_still_works(self):
+        ctx = {
+            "session_key": "agent:main:telegram:dm:12345",
+            "chat_id": "12345",
+            "user_id": "12345",
+            "platform": "telegram",
+        }
+        with patch(ROUTING, {"12345": {"model": "gpt-4o"}}):
+            with patch(DEFAULT, None):
+                with patch(SET_OVERRIDE) as mock_set:
+                    import asyncio
+
+                    asyncio.run(handle("session:start", ctx))
+                    mock_set.assert_called_once()
+                    assert mock_set.call_args[1]["model"] == "gpt-4o"
