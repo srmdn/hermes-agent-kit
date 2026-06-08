@@ -1,7 +1,6 @@
 default:
   model: "opencode-go/gpt-4o-mini"
 
-topics:
-  # "42":
-  #   model: "opencode-go/qwen-3.6-plus"
-  #   profile: "finance"
+topics: {}
+#   "42":
+#     model: "opencode-go/qwen-3.6-plus"  #   profile: "finance"

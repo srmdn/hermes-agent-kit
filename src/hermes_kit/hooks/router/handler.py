@@ -8,7 +8,7 @@ _hook_dir = Path(__file__).parent
 _routing_path = _hook_dir / "topic_router.yaml"
 if _routing_path.exists():
     raw = yaml.safe_load(_routing_path.read_text()) or {}
-    _ROUTING = raw.get("topics", {})
+    _ROUTING = raw.get("topics") or {}
     _DEFAULT = raw.get("default")
 
 
