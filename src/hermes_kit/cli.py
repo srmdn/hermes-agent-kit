@@ -1,4 +1,5 @@
 import importlib.metadata
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -91,6 +92,17 @@ def doctor() -> None:
 
         print(f"  {name}: {' '.join(status)}")
 
+    findings = _doctor_findings(
+        installed,
+        _read_router_config(),
+        _read_hermes_config(),
+    )
+    if findings:
+        print()
+        print("Warnings:")
+        for finding in findings:
+            print(f"  - {finding}")
+
     print("Done.")
 
 
@@ -143,6 +155,9 @@ def gateway_run() -> None:
         print("[hermes-kit] See: https://github.com/NousResearch/hermes-agent")
         sys.exit(1)
 
+    for note in _ensure_runtime_from_router_default():
+        print(f"[hermes-kit] bootstrap: {note}")
+
     print(f"[hermes-kit] patching bridge...")
 
     try:
@@ -163,6 +178,11 @@ def _router_config_path() -> Path:
     return Path(get_hooks_dir()) / "router" / "topic_router.yaml"
 
 
+def _hermes_config_path() -> Path:
+    hermes_home = os.environ.get("HERMES_HOME", os.path.expanduser("~/.hermes"))
+    return Path(hermes_home) / "config.yaml"
+
+
 def _read_router_config() -> dict:
     path = _router_config_path()
     if path.exists():
@@ -176,16 +196,140 @@ def _write_router_config(config: dict) -> None:
     path.write_text(yaml.dump(config, default_flow_style=False, sort_keys=False))
 
 
+def _read_hermes_config() -> dict:
+    path = _hermes_config_path()
+    if path.exists():
+        return yaml.safe_load(path.read_text()) or {}
+    return {}
+
+
+def _write_hermes_config(config: dict) -> None:
+    path = _hermes_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.dump(config, default_flow_style=False, sort_keys=False))
+
+
+def _infer_provider_from_model(model: str | None) -> str | None:
+    if not model or "/" not in model:
+        return None
+    prefix, _ = model.split("/", 1)
+    if prefix in {"opencode-go", "openrouter"}:
+        return prefix
+    return None
+
+
+def _ensure_runtime_from_router_default() -> list[str]:
+    router_config = _read_router_config()
+    default_route = router_config.get("default") or {}
+    model = default_route.get("model")
+    provider = default_route.get("provider") or _infer_provider_from_model(model)
+    if not model or not provider:
+        return []
+
+    hermes_config = _read_hermes_config()
+    changed: list[str] = []
+
+    model_config = hermes_config.get("model")
+    if not isinstance(model_config, dict):
+        model_config = {}
+        hermes_config["model"] = model_config
+
+    if not model_config.get("default"):
+        model_config["default"] = model
+        changed.append(f"set Hermes default model to {model}")
+        model_config["provider"] = provider
+        changed.append(f"set Hermes default provider to {provider}")
+    elif not model_config.get("provider") and provider:
+        model_config["provider"] = provider
+        changed.append(f"set Hermes default provider to {provider}")
+
+    if provider == "opencode-go":
+        providers = hermes_config.get("providers")
+        if not isinstance(providers, dict):
+            providers = {}
+            hermes_config["providers"] = providers
+
+        provider_config = providers.get("opencode-go")
+        if not isinstance(provider_config, dict):
+            provider_config = {}
+            providers["opencode-go"] = provider_config
+
+        if not provider_config.get("api_key"):
+            provider_config["api_key"] = "OPENCODE_GO_API_KEY"
+            changed.append("set providers.opencode-go.api_key to OPENCODE_GO_API_KEY")
+        if not provider_config.get("base_url"):
+            provider_config["base_url"] = "https://opencode.ai/zen/go/v1"
+            changed.append("set providers.opencode-go.base_url to https://opencode.ai/zen/go/v1")
+
+    if changed:
+        _write_hermes_config(hermes_config)
+    return changed
+
+
+def _doctor_findings(installed_hooks: list[str], router_config: dict, hermes_config: dict) -> list[str]:
+    findings: list[str] = []
+
+    default_route = router_config.get("default") or {}
+    route_model = default_route.get("model")
+    route_provider = default_route.get("provider")
+    inferred_provider = _infer_provider_from_model(route_model)
+
+    if "router" in installed_hooks and route_model and not route_provider and inferred_provider:
+        findings.append(
+            f"router default '{route_model}' has no provider; use '--provider {inferred_provider}' to avoid provider fallback drift."
+        )
+
+    if "router" in installed_hooks and "model-switch" not in installed_hooks:
+        findings.append("router is installed but model-switch is missing; '/route' will not work.")
+
+    model_config = hermes_config.get("model")
+    if not isinstance(model_config, dict):
+        model_config = {}
+    global_model = model_config.get("default")
+    global_provider = model_config.get("provider")
+    expected_provider = route_provider or inferred_provider
+
+    if route_model and expected_provider and not global_model:
+        findings.append(
+            f"Hermes model.default is empty while router default is '{route_model}'; reset/system paths may fall back to the wrong provider."
+        )
+
+    if route_model and expected_provider and not global_provider:
+        findings.append(
+            f"Hermes model.provider is empty while router default expects '{expected_provider}'."
+        )
+
+    if route_model and expected_provider and not global_model and global_provider and global_provider != expected_provider:
+        findings.append(
+            f"Hermes model.provider is '{global_provider}' but router default expects '{expected_provider}'; first-turn auth failures are likely."
+        )
+
+    if expected_provider == "opencode-go":
+        providers = hermes_config.get("providers")
+        if not isinstance(providers, dict):
+            providers = {}
+        go_config = providers.get("opencode-go")
+        if not isinstance(go_config, dict):
+            go_config = {}
+        if not go_config.get("api_key"):
+            findings.append("providers.opencode-go.api_key is missing; set it to OPENCODE_GO_API_KEY.")
+        if not go_config.get("base_url"):
+            findings.append("providers.opencode-go.base_url is missing; set it to https://opencode.ai/zen/go/v1.")
+
+    return findings
+
+
 def router_add(topic_id: str, model: str, provider: str | None = None) -> None:
     config = _read_router_config()
     topics = config.get("topics") or {}
+    resolved_provider = provider or _infer_provider_from_model(model)
     entry: dict[str, str] = {"model": model}
-    if provider:
-        entry["provider"] = provider
+    if resolved_provider:
+        entry["provider"] = resolved_provider
     topics[topic_id] = entry
     config["topics"] = topics
     _write_router_config(config)
-    provider_msg = f" (provider: {provider})" if provider else ""
+    provider_msg = f" (provider: {resolved_provider})" if resolved_provider else ""
     print(f"Added topic '{topic_id}' → {model}{provider_msg}")
 
 
@@ -224,13 +368,17 @@ def router_show() -> None:
 
 def router_set_default(model: str, provider: str | None = None) -> None:
     config = _read_router_config()
+    resolved_provider = provider or _infer_provider_from_model(model)
     entry: dict[str, str] = {"model": model}
-    if provider:
-        entry["provider"] = provider
+    if resolved_provider:
+        entry["provider"] = resolved_provider
     config["default"] = entry
     _write_router_config(config)
-    provider_msg = f" (provider: {provider})" if provider else ""
+    bootstrap_notes = _ensure_runtime_from_router_default()
+    provider_msg = f" (provider: {resolved_provider})" if resolved_provider else ""
     print(f"Default model: {model}{provider_msg}")
+    for note in bootstrap_notes:
+        print(f"Bootstrap: {note}")
 
 
 def _parse_flag(flag: str, args: list[str]) -> str | None:

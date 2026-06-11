@@ -133,6 +133,39 @@ class TestDoctor:
             out = _run_cli(["hermes-kit", "doctor"], capsys)
             assert "No hooks" in out or "OK" in out
 
+    def test_doctor_warns_when_router_default_has_no_provider(self, capsys):
+        fake_installed = [Path("/tmp/hooks/router"), Path("/tmp/hooks/fallback")]
+        with patch("hermes_kit.cli.get_hooks_dir", return_value="/tmp/hooks"):
+            with patch("hermes_kit.cli.Path.exists", return_value=True):
+                with patch("hermes_kit.cli.Path.is_dir", return_value=True):
+                    with patch("hermes_kit.cli.Path.iterdir", return_value=fake_installed):
+                        with patch("hermes_kit.cli._read_router_config", return_value={"default": {"model": "opencode-go/qwen3.6-plus"}}):
+                            with patch("hermes_kit.cli._read_hermes_config", return_value={}):
+                                out = _run_cli(["hermes-kit", "doctor"], capsys)
+        assert "Warnings:" in out
+        assert "has no provider" in out
+        assert "model-switch is missing" in out
+
+    def test_doctor_warns_when_opencode_go_bundle_missing(self, capsys):
+        fake_installed = [Path("/tmp/hooks/router"), Path("/tmp/hooks/model-switch")]
+        with patch("hermes_kit.cli.get_hooks_dir", return_value="/tmp/hooks"):
+            with patch("hermes_kit.cli.Path.exists", return_value=True):
+                with patch("hermes_kit.cli.Path.is_dir", return_value=True):
+                    with patch("hermes_kit.cli.Path.iterdir", return_value=fake_installed):
+                        with patch(
+                            "hermes_kit.cli._read_router_config",
+                            return_value={"default": {"model": "opencode-go/qwen3.6-plus", "provider": "opencode-go"}},
+                        ):
+                            with patch(
+                                "hermes_kit.cli._read_hermes_config",
+                                return_value={"model": {"provider": "openrouter"}},
+                            ):
+                                out = _run_cli(["hermes-kit", "doctor"], capsys)
+        assert "model.default is empty" in out
+        assert "model.provider is 'openrouter'" in out
+        assert "providers.opencode-go.api_key is missing" in out
+        assert "providers.opencode-go.base_url is missing" in out
+
 
 class TestStatus:
     def test_status_shows_version(self, capsys):
@@ -189,6 +222,15 @@ class TestRouterCLI:
                     assert config["topics"]["42"]["provider"] == "openai"
                     assert "provider: openai" in out
 
+    def test_router_add_infers_opencode_go_provider(self, capsys):
+        with patch("hermes_kit.cli._router_config_path", return_value=Path("/tmp/test_router.yaml")):
+            with patch("hermes_kit.cli._read_router_config", return_value={}):
+                with patch("hermes_kit.cli._write_router_config") as mock_write:
+                    out = _run_cli(["hermes-kit", "router", "add", "42", "--model", "opencode-go/qwen3.6-plus"], capsys)
+                    config = mock_write.call_args[0][0]
+                    assert config["topics"]["42"]["provider"] == "opencode-go"
+                    assert "provider: opencode-go" in out
+
     def test_router_remove(self, capsys):
         existing = {"topics": {"42": {"model": "gpt-4o"}}}
         with patch("hermes_kit.cli._router_config_path", return_value=Path("/tmp/test_router.yaml")):
@@ -228,14 +270,32 @@ class TestRouterCLI:
         with patch("hermes_kit.cli._router_config_path", return_value=Path("/tmp/test_router.yaml")):
             with patch("hermes_kit.cli._read_router_config", return_value={}):
                 with patch("hermes_kit.cli._write_router_config") as mock_write:
-                    out = _run_cli(
-                        ["hermes-kit", "router", "set-default", "--model", "gpt-4o-mini", "--provider", "openai"],
-                        capsys,
-                    )
-                    config = mock_write.call_args[0][0]
-                    assert config["default"]["model"] == "gpt-4o-mini"
-                    assert config["default"]["provider"] == "openai"
-                    assert "Default model:" in out
+                    with patch("hermes_kit.cli._ensure_runtime_from_router_default", return_value=[]):
+                        out = _run_cli(
+                            ["hermes-kit", "router", "set-default", "--model", "gpt-4o-mini", "--provider", "openai"],
+                            capsys,
+                        )
+                        config = mock_write.call_args[0][0]
+                        assert config["default"]["model"] == "gpt-4o-mini"
+                        assert config["default"]["provider"] == "openai"
+                        assert "Default model:" in out
+
+    def test_router_set_default_infers_provider_and_bootstraps(self, capsys):
+        with patch("hermes_kit.cli._router_config_path", return_value=Path("/tmp/test_router.yaml")):
+            with patch("hermes_kit.cli._read_router_config", return_value={}):
+                with patch("hermes_kit.cli._write_router_config") as mock_write:
+                    with patch(
+                        "hermes_kit.cli._ensure_runtime_from_router_default",
+                        return_value=["set Hermes default provider to opencode-go"],
+                    ):
+                        out = _run_cli(
+                            ["hermes-kit", "router", "set-default", "--model", "opencode-go/qwen3.6-plus"],
+                            capsys,
+                        )
+                        config = mock_write.call_args[0][0]
+                        assert config["default"]["model"] == "opencode-go/qwen3.6-plus"
+                        assert config["default"]["provider"] == "opencode-go"
+                        assert "Bootstrap: set Hermes default provider to opencode-go" in out
 
 
 class TestGatewayRun:
