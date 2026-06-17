@@ -1,10 +1,18 @@
-# Fallback — Automatic Model Retry
+# Fallback — Session Fallback Chain
 
-When a model fails (API error, timeout, rate limit), the fallback hook automatically tries the next model in the chain.
+Define an ordered chain of fallback models for each session.
 
 ## How It Works
 
-The fallback hook registers a chain of models at `agent:start`. When the primary model errors, the gateway retries with the next model. The chain is ordered — first match wins.
+The fallback hook registers a chain of models for the active session before model resolution. The chain is ordered — first item is the primary, later items are fallback candidates.
+
+What hermes-kit ships today:
+- session-scoped fallback chain registration
+- bridge helpers such as `hermes_kit.bridge.get_current_fallback(...)`
+- `hermes_kit.bridge.retry_with_fallback(session_key)` to advance to the next model
+
+What hermes-kit does **not** ship yet:
+- a full automatic retry loop in gateway code that calls `retry_with_fallback(...)` for you on provider failure
 
 ## Configuration
 
@@ -19,7 +27,7 @@ chains:
     - "opencode-go/deepseek-v4-flash"    # last resort
 ```
 
-Models are tried in order. If `deepseek-v4-pro` fails → try `kimi-k2.6` → try `qwen3.6-plus` → try `deepseek-v4-flash`.
+Models are ordered from primary to last resort. If your recovery logic calls `retry_with_fallback(session_key)`, Hermes advances from `deepseek-v4-pro` → `kimi-k2.6` → `qwen3.6-plus` → `deepseek-v4-flash`.
 
 > All models in the chain must use the same provider. The examples above all use `opencode-go` — this is same-provider fallback and is fully supported. To switch providers per topic (e.g. opencode-go for coding, OpenAI for general chat), use [multi-provider routing](router.md) instead.
 
@@ -47,11 +55,11 @@ Keep chains to 3-4 models. Longer chains mean longer retry delays and user-visib
 
 ## Retry Behavior
 
-When a model fails:
+When a model fails and your integration calls `retry_with_fallback(session_key)`:
 
-1. The error is caught
-2. The next model in the chain is selected
-3. The request is retried with the new model
+1. The fallback index advances
+2. The next model in the chain becomes the active override
+3. Your retry logic resubmits the request
 4. This repeats until success or chain exhausted
 5. If all models fail, the error surfaces to the user
 
@@ -66,4 +74,4 @@ chains:
     - "opencode-go/deepseek-v4-flash"    # should be used instead
 ```
 
-Restart gateway and send a message. The response should come from `deepseek-v4-flash`.
+Restart gateway and send a message. Then trigger your retry path or custom recovery logic. The next retry should use `deepseek-v4-flash`.

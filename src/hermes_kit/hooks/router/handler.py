@@ -1,15 +1,18 @@
-import yaml
 from pathlib import Path
+import yaml
+
 from hermes_kit import bridge
 
-_ROUTING: dict[str, dict] = {}
-_DEFAULT: dict | None = None
 _hook_dir = Path(__file__).parent
 _routing_path = _hook_dir / "topic_router.yaml"
-if _routing_path.exists():
+
+
+def _read_routing() -> tuple[dict[str, dict], dict | None]:
+    if not _routing_path.exists():
+        return {}, None
+
     raw = yaml.safe_load(_routing_path.read_text()) or {}
-    _ROUTING = raw.get("topics") or {}
-    _DEFAULT = raw.get("default")
+    return raw.get("topics") or {}, raw.get("default")
 
 
 def _extract_routing_id(context: dict) -> str | None:
@@ -28,14 +31,16 @@ async def handle(event_type: str, context: dict) -> None:
         return
 
     if event_type == "session:start":
+        bridge.register_session(context.get("session_id"), session_key)
         routing_id = _extract_routing_id(context)
         if routing_id:
             user_id = context.get("user_id")
             if user_id:
                 bridge.track_user_topic(user_id, routing_id)
-            route = _ROUTING.get(routing_id)
+            routing, default = _read_routing()
+            route = routing.get(routing_id)
             if not route:
-                route = _DEFAULT
+                route = default
             if route:
                 bridge.set_override(
                     session_key,

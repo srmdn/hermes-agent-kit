@@ -12,6 +12,9 @@ _fallback_index: dict[str, int] = {}
 _rate_counters: dict[str, int] = {}
 _rate_windows: dict[str, float] = {}
 _rate_limited: set[str] = set()
+_session_keys_by_session_id: dict[str, str] = {}
+_latest_agent_run: dict[str, dict] = {}
+_last_usage_totals: dict[str, tuple[int, int]] = {}
 
 
 def set_override(session_key: str, model: str, provider: Optional[str] = None) -> None:
@@ -86,6 +89,17 @@ def is_rate_limited(session_key: str) -> bool:
     return session_key in _rate_limited
 
 
+def register_session(session_id: str | None, session_key: str | None) -> None:
+    if session_id and session_key:
+        _session_keys_by_session_id[session_id] = session_key
+
+
+def get_session_key_for_session_id(session_id: str | None) -> str | None:
+    if not session_id:
+        return None
+    return _session_keys_by_session_id.get(session_id)
+
+
 # Shared state for cross-hook communication. Router hook tracks which
 # topic a user last interacted with; model-switch hook reads it so
 # /route commands are applied to the correct Telegram topic in groups.
@@ -148,6 +162,19 @@ def reset_session_cost(session_key: str) -> None:
     _session_costs.pop(session_key, None)
 
 
+def reset_usage_baseline(session_key: str) -> None:
+    _last_usage_totals.pop(session_key, None)
+
+
+def track_cost_from_totals(session_key: str, model: str, total_input_tokens: int, total_output_tokens: int) -> None:
+    prev_input, prev_output = _last_usage_totals.get(session_key, (0, 0))
+    delta_input = max(0, total_input_tokens - prev_input)
+    delta_output = max(0, total_output_tokens - prev_output)
+    _last_usage_totals[session_key] = (total_input_tokens, total_output_tokens)
+    if delta_input or delta_output:
+        track_cost(session_key, model, delta_input, delta_output)
+
+
 def alert_cost_exceeded(session_key: str, total: float, threshold: float) -> None:
     print(f"[hermes-kit] COST ALERT: session {session_key} total ${total:.4f} exceeds threshold ${threshold:.2f}")
 
@@ -164,11 +191,37 @@ def _apply_override(override: dict, model: str, runtime_kwargs: dict) -> tuple[s
     return model, runtime_kwargs
 
 
+def remember_agent_run(session_id: str | None, session_key: str | None, result: dict | None) -> None:
+    if not result:
+        return
+
+    resolved_session_id = result.get("session_id") or session_id
+    resolved_session_key = session_key or get_session_key_for_session_id(resolved_session_id)
+    register_session(resolved_session_id, resolved_session_key)
+
+    if resolved_session_id:
+        _latest_agent_run[resolved_session_id] = {
+            "session_key": resolved_session_key,
+            "model": result.get("model"),
+            "input_tokens": int(result.get("input_tokens", 0) or 0),
+            "output_tokens": int(result.get("output_tokens", 0) or 0),
+            "last_prompt_tokens": int(result.get("last_prompt_tokens", 0) or 0),
+        }
+
+
+def get_latest_agent_run(session_id: str | None) -> dict | None:
+    if not session_id:
+        return None
+    return _latest_agent_run.get(session_id)
+
+
 def patch_gateway_resolver() -> None:
     import inspect
     from gateway.run import GatewayRunner
 
     original = GatewayRunner._resolve_session_agent_runtime
+    if getattr(original, "__hermes_kit_patched__", False):
+        return
     original_is_async = inspect.iscoroutinefunction(original)
 
     if original_is_async:
@@ -185,6 +238,8 @@ def patch_gateway_resolver() -> None:
                 if override:
                     model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
             return model, runtime_kwargs
+
+        patched_resolver.__hermes_kit_patched__ = True
     else:
         def patched_resolver(self, *args, **kwargs):
             model, runtime_kwargs = original(self, *args, **kwargs)
@@ -200,7 +255,23 @@ def patch_gateway_resolver() -> None:
                     model, runtime_kwargs = _apply_override(override, model, runtime_kwargs)
             return model, runtime_kwargs
 
+        patched_resolver.__hermes_kit_patched__ = True
+
     GatewayRunner._resolve_session_agent_runtime = patched_resolver
+
+    original_run_agent = GatewayRunner._run_agent
+    if not getattr(original_run_agent, "__hermes_kit_patched__", False):
+        async def patched_run_agent(self, *args, **kwargs):
+            result = await original_run_agent(self, *args, **kwargs)
+            remember_agent_run(
+                kwargs.get("session_id"),
+                kwargs.get("session_key"),
+                result,
+            )
+            return result
+
+        patched_run_agent.__hermes_kit_patched__ = True
+        GatewayRunner._run_agent = patched_run_agent
 
 
 def patch_known_commands() -> None:

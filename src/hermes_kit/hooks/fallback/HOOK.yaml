@@ -1,4 +1,5 @@
 name: fallback
 description: Automatic model fallback chain when primary model fails
 events:
+  - session:start
   - agent:start

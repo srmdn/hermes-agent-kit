@@ -58,6 +58,30 @@ hermes-kit gateway run --accept-hooks  # restart with bridge patching
 hermes-kit gateway run --accept-hooks
 ```
 
+If you changed the route with `/route`, send one more normal message in the same topic or DM. No gateway restart is required for `/route` changes, but the new mapping is applied on the next `session:start`.
+
+Also verify both hooks are installed:
+```bash
+hermes-kit doctor
+```
+`router` and `model-switch` should both appear.
+
+## Fallback chain configured but no automatic retry happens
+
+**Symptom:** `fallback_chain.yaml` exists, but a provider failure still surfaces immediately.
+
+**Root cause:** hermes-kit currently registers the fallback chain and exposes `hermes_kit.bridge.retry_with_fallback(session_key)`, but it does not ship a full automatic retry loop in gateway code yet.
+
+**Fix:** Use fallback as session-scoped retry state for your recovery logic or custom hook integration. See [fallback docs](manual/fallback.md).
+
+## Cost tracker shows $0.0000
+
+**Symptom:** Cost tracker runs, but the estimate is zero.
+
+**Root cause:** The current built-in pricing table only covers the bundled OpenCode Go model IDs in `bridge.py`. Unknown model IDs are tracked as zero-cost estimates.
+
+**Fix:** Confirm the routed model ID is one of the documented built-in pricing entries in [cost-tracker docs](manual/cost-tracker.md).
+
 ## API key errors
 
 **Symptom:** `Provider 'opencode-go' is set but no API key was found.`

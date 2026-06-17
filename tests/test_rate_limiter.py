@@ -14,6 +14,7 @@ NOW = time.time()
 def make_context(user_id="123", platform="telegram"):
     return {
         "session_key": f"agent:main:{platform}:dm:{user_id}",
+        "session_id": f"session-{user_id}",
         "user_id": user_id,
         "platform": platform,
     }
@@ -34,7 +35,8 @@ class TestRateLimiter:
             with patch(WINDOW, return_value=NOW):
                 with patch(INC, return_value=5) as mock_inc:
                     import asyncio
-                    asyncio.run(handle("agent:step", ctx))
+                    asyncio.run(handle("session:start", ctx))
+                    asyncio.run(handle("agent:step", {"session_id": ctx["session_id"], "user_id": ctx["user_id"], "platform": ctx["platform"]}))
                     mock_inc.assert_called_once_with(ctx["session_key"])
 
     def test_sets_rate_limited_when_exceeded(self):
@@ -44,18 +46,20 @@ class TestRateLimiter:
                 with patch(INC, return_value=6):
                     with patch(LIMITED) as mock_limited:
                         import asyncio
-                        asyncio.run(handle("agent:step", ctx))
+                        asyncio.run(handle("session:start", ctx))
+                        asyncio.run(handle("agent:step", {"session_id": ctx["session_id"], "user_id": ctx["user_id"], "platform": ctx["platform"]}))
                         mock_limited.assert_called_once_with(ctx["session_key"])
 
     def test_resets_window_when_expired(self):
         ctx = make_context()
         with patch(LIMITS, {"global": {"max_messages_per_window": 100, "window_seconds": 60}}):
             with patch(WINDOW, return_value=0):
-                with patch(INC, return_value=50):
+                with patch(INC, return_value=1):
                     with patch(RESET) as mock_reset:
                         import asyncio
-                        asyncio.run(handle("agent:step", ctx))
-                        mock_reset.assert_called_once()
+                        asyncio.run(handle("session:start", ctx))
+                        asyncio.run(handle("agent:step", {"session_id": ctx["session_id"], "user_id": ctx["user_id"], "platform": ctx["platform"]}))
+                        assert mock_reset.call_count == 2
 
     def test_no_limit_configured_no_action(self):
         ctx = make_context()

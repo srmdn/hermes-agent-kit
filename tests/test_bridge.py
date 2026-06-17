@@ -136,6 +136,7 @@ class TestRateLimitFunctions:
 class TestCostFunctions:
     def setup_method(self):
         bridge._session_costs.clear()
+        bridge._last_usage_totals.clear()
 
     def test_track_cost_adds_entry(self):
         bridge.track_cost("s1", "qwen3.6-plus", 1000, 500)
@@ -167,6 +168,15 @@ class TestCostFunctions:
 
     def test_reset_session_cost_missing_no_error(self):
         bridge.reset_session_cost("nonexistent")
+
+    def test_track_cost_from_totals_tracks_only_delta(self):
+        bridge.track_cost_from_totals("s1", "qwen3.6-plus", 1000, 500)
+        first = bridge.get_session_cost("s1")
+        bridge.track_cost_from_totals("s1", "qwen3.6-plus", 1500, 700)
+        second = bridge.get_session_cost("s1")
+        assert second > first
+        bridge.track_cost_from_totals("s1", "qwen3.6-plus", 1500, 700)
+        assert bridge.get_session_cost("s1") == second
 
     def test_alert_cost_exceeded_prints(self, capsys):
         bridge.alert_cost_exceeded("s1", 5.5, 1.0)
@@ -208,24 +218,31 @@ class TestApplyOverride:
 class TestPatchGatewayResolver:
     def setup_method(self):
         self._original = None
+        self._original_run_agent = None
 
     def teardown_method(self):
         if self._original is not None:
             from gateway.run import GatewayRunner
             GatewayRunner._resolve_session_agent_runtime = self._original
+        if self._original_run_agent is not None:
+            from gateway.run import GatewayRunner
+            GatewayRunner._run_agent = self._original_run_agent
 
     def test_patch_replaces_resolver(self):
         from gateway.run import GatewayRunner
 
         self._original = GatewayRunner._resolve_session_agent_runtime
+        self._original_run_agent = GatewayRunner._run_agent
         bridge.patch_gateway_resolver()
-        assert GatewayRunner._resolve_session_agent_runtime is not self._original
+        assert getattr(GatewayRunner._resolve_session_agent_runtime, "__hermes_kit_patched__", False) is True
+        assert getattr(GatewayRunner._run_agent, "__hermes_kit_patched__", False) is True
 
     def test_rate_limited_session_raises(self):
         import inspect
         from gateway.run import GatewayRunner
 
         self._original = GatewayRunner._resolve_session_agent_runtime
+        self._original_run_agent = GatewayRunner._run_agent
         session_key = "agent:main:telegram:dm:test-user"
 
         bridge.set_rate_limited(session_key)
@@ -253,6 +270,7 @@ class TestPatchGatewayResolver:
         from gateway.run import GatewayRunner
 
         self._original = GatewayRunner._resolve_session_agent_runtime
+        self._original_run_agent = GatewayRunner._run_agent
         session_key = "agent:main:telegram:dm:test-user"
 
         bridge.set_override(session_key, model="gpt-4o-mini")
@@ -274,3 +292,21 @@ class TestPatchGatewayResolver:
             assert model == "gpt-4o-mini"
 
         bridge._model_overrides.clear()
+
+    def test_remember_agent_run_stores_latest_result(self):
+        bridge._latest_agent_run.clear()
+        bridge._session_keys_by_session_id.clear()
+        bridge.remember_agent_run(
+            "session-1",
+            "agent:main:telegram:dm:123",
+            {
+                "session_id": "session-1",
+                "model": "qwen3.6-plus",
+                "input_tokens": 1000,
+                "output_tokens": 500,
+            },
+        )
+        snapshot = bridge.get_latest_agent_run("session-1")
+        assert snapshot["model"] == "qwen3.6-plus"
+        assert snapshot["input_tokens"] == 1000
+        assert bridge.get_session_key_for_session_id("session-1") == "agent:main:telegram:dm:123"

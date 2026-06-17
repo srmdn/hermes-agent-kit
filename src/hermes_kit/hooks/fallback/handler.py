@@ -11,12 +11,16 @@ if _chain_path.exists():
 
 
 async def handle(event_type: str, context: dict) -> None:
-    if event_type != "agent:start":
+    if event_type not in {"session:start", "agent:start"}:
         return
 
-    session_key = context.get("session_key")
+    session_key = context.get("session_key") or bridge.get_session_key_for_session_id(
+        context.get("session_id")
+    )
     if not session_key:
         return
+
+    bridge.register_session(context.get("session_id"), session_key)
 
     chain = _CHAINS.get("global")
     if chain:

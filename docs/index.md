@@ -27,13 +27,18 @@ hermes-kit install router fallback rate-limiter cost-tracker model-switch
 hermes-kit gateway run --accept-hooks
 ```
 
+Notes:
+- `/route` changes do not require a restart; the next message in that topic or DM picks them up.
+- Fallback chains are registered per session, but automatic retry still depends on calling `hermes_kit.bridge.retry_with_fallback(session_key)` from recovery logic.
+- Cost tracking estimates are non-zero only for model IDs with built-in pricing data.
+
 ## Docs
 
 - [Quickstart](quickstart.md) — agent-driven and manual install
 - [Providers](providers.md) — supported AI providers and model lists
 - Manual setup per module:
   - [Router](manual/router.md) — per-topic model routing + `/route` command
-  - [Fallback](manual/fallback.md) — automatic retry chains
+  - [Fallback](manual/fallback.md) — session fallback chains
   - [Rate Limiter](manual/rate-limiter.md) — per-user quotas
   - [Cost Tracker](manual/cost-tracker.md) — budget alerts
 - [Troubleshooting](troubleshooting.md) — common issues

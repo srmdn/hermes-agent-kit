@@ -96,6 +96,8 @@ GATEWAY_ALLOW_ALL_USERS=true hermes-kit gateway run --accept-hooks
 
 Hooks land in `~/.hermes/hooks/<name>/`. Hermes discovers them on restart.
 
+`/route` updates do not require a gateway restart. The model-switch hook writes the routing file, and the router hook picks up the change on the next message in that topic or DM.
+
 ## Modules
 
 ### router — Per-Topic Model Routing
@@ -122,14 +124,14 @@ topics:
 **Multi-provider** — route specific topics to native providers:
 ```bash
 hermes-kit router add 42 --model gpt-4o --provider openai
-hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
+hermes-kit router add 7 --model claude-sonnet-4-6 --provider anthropic
 ```
 
 Hermes resolves API keys from `~/.hermes/.env` (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.). See [providers guide](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/providers.md) for all supported providers and model IDs.
 
-### fallback — Automatic Fallback Chain
+### fallback — Session Fallback Chain
 
-Define a chain of models to try when the primary fails.
+Define a chain of models to use for fallback decisions within a session.
 
 **Via YAML** (`~/.hermes/hooks/fallback/fallback_chain.yaml`):
 ```yaml
@@ -140,7 +142,9 @@ chains:
     - "opencode-go/qwen3.6-plus"          # last resort
 ```
 
-After a failure, call `hermes_kit.bridge.retry_with_fallback(session_key)` to advance to the next model.
+The fallback hook registers the chain for the active session. To actually advance to the next model after an error, call `hermes_kit.bridge.retry_with_fallback(session_key)` from your recovery logic or custom hook integration.
+
+> Current state: hermes-kit ships the fallback chain and bridge helpers, but not a full automatic retry loop in gateway code yet.
 
 ### rate-limiter — Per-User Rate Limiting
 
@@ -157,11 +161,11 @@ limits:
       max_messages_per_window: 50
 ```
 
-> Rate limiter enforces limits at the bridge level — exceeding users get `RateLimitExceeded` on every request until their window resets. Set `window_seconds` to control reset timing.
+> Rate limiter enforces limits at the bridge level. Exceeding users get `RateLimitExceeded` until the current time window expires; a brand-new session is not required.
 
 ### cost-tracker — Real-Time Cost Tracking
 
-Track token costs per session and alert when thresholds are exceeded.
+Estimate token costs per session and alert when thresholds are exceeded.
 
 **Via YAML** (`~/.hermes/hooks/cost-tracker/cost_tracker.yaml`):
 ```yaml
@@ -170,13 +174,28 @@ alert_threshold_usd: 1.0
 
 Set to `0` to disable alerts but continue tracking.
 
+Cost estimates are computed from Hermes session totals at `agent:end`. Built-in non-zero pricing currently covers the bundled OpenCode Go model IDs in `bridge.py`; unknown model IDs are tracked as `$0.00` until pricing is added.
+
+### model-switch — `/route` Commands
+
+Manage routing from Telegram without editing files on the server.
+
+```bash
+/route show
+/route opencode-go/deepseek-v4-pro
+/route default opencode-go/qwen3.6-plus
+/route reset
+```
+
+`/route` writes `~/.hermes/hooks/router/topic_router.yaml`. The next message in that topic or DM uses the updated route.
+
 ## Docs
 
 - [Quickstart](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/quickstart.md) — agent-driven and manual install
 - [Providers](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/providers.md) — supported AI providers and model lists
 - Manual setup per module:
   - [Router](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/router.md) — per-topic model routing + `/route` command
-  - [Fallback](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/fallback.md) — automatic retry chains
+  - [Fallback](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/fallback.md) — session fallback chains
   - [Rate Limiter](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/rate-limiter.md) — per-user quotas
   - [Cost Tracker](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/manual/cost-tracker.md) — budget alerts
 - [Troubleshooting](https://github.com/srmdn/hermes-agent-kit/blob/main/docs/troubleshooting.md) — common issues

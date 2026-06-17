@@ -4,9 +4,9 @@ Prevent a single user or chat from draining your API budget by setting message l
 
 ## How It Works
 
-The rate limiter tracks message counts per session. When a user exceeds the configured limit within a time window, the session is blocked — the bridge raises `RateLimitExceeded` on every request until the window resets at the next `session:start` event.
+The rate limiter tracks message counts per session. When a user exceeds the configured limit within a time window, the session is blocked — the bridge raises `RateLimitExceeded` on every request until the current window expires.
 
-> Rate limiter enforces limits at the bridge level. Exceeding users cannot send messages until their window resets.
+> Rate limiter enforces limits at the bridge level. Exceeding users cannot send messages until their current window resets.
 
 ## Configuration
 
@@ -29,7 +29,7 @@ limits:
 
 - `global` — applies to all users without a per-user override
 - `per_user` — specific limits for individual Telegram user IDs
-- `window_seconds` — sliding time window after which the counter resets
+- `window_seconds` — time window after which the counter resets on the next request
 
 ## Examples
 
@@ -74,4 +74,4 @@ See [Router docs](router.md) for methods to find Telegram user/chat IDs.
 
 ## Verification
 
-Send rapid messages from a test account. After exceeding the limit, the bot should stop responding. Check logs for rate limit warnings.
+Send rapid messages from a test account. After exceeding the limit, the bot should stop responding. Wait for `window_seconds` to elapse, then send another message — the counter should reset automatically without needing a brand-new session.

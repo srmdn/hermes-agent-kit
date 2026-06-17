@@ -5,7 +5,7 @@
 **hermes-kit is a plugin — Hermes must work first.**
 
 1. [Install Hermes Agent](https://github.com/NousResearch/hermes-agent) v0.16+
-2. Configure a model and provider (see [Prerequisites](#prerequisites) in README)
+2. Configure a model and provider (see [README prerequisites](https://github.com/srmdn/hermes-agent-kit/blob/main/README.md#prerequisites))
 3. Set up your gateway (Telegram, Discord, etc.)
 4. **Verify**: send a test message → gateway responds with correct model
 5. Only then install hermes-kit hooks
@@ -36,6 +36,8 @@ pip install hermes-agent-kit
 hermes-kit install router fallback rate-limiter cost-tracker model-switch
 hermes-kit gateway run --accept-hooks
 ```
+
+Route changes made later with `/route` do not require a restart. The next message in that topic or DM picks them up automatically.
 
 ### Verify
 
@@ -70,3 +72,8 @@ hermes-kit status
 - [Set up fallback chains](manual/fallback.md) — what happens when a model fails
 - [Configure rate limits](manual/rate-limiter.md) — prevent budget drain
 - [Set cost alerts](manual/cost-tracker.md) — get notified at budget thresholds
+
+Behavior notes:
+- `fallback` seeds an ordered chain for each session; retry progression uses `hermes_kit.bridge.retry_with_fallback(session_key)`.
+- `rate-limiter` blocks requests only until the current time window expires.
+- `cost-tracker` estimates cost from Hermes session totals at the end of the turn.

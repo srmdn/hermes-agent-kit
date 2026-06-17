@@ -66,16 +66,18 @@ hermes-kit install model-switch
 
 | Command | What it does |
 |---------|-------------|
-| `/route deepseek-v4-pro` | Switch this topic to deepseek-v4-pro |
+| `/route opencode-go/deepseek-v4-pro` | Switch this topic to `opencode-go/deepseek-v4-pro` |
 | `/route show` | Show current routing for this topic |
-| `/route default qwen3.6-plus` | Set the default model for unmapped topics |
+| `/route default opencode-go/qwen3.6-plus` | Set the default model for unmapped topics |
 | `/route reset` | Remove routing for this topic (fall back to default) |
 
 ### How it works
 
-1. User sends `/route deepseek-v4-pro` in a Telegram DM or group topic
+1. User sends `/route opencode-go/deepseek-v4-pro` in a Telegram DM or group topic
 2. Model-switch hook fires, updates `topic_router.yaml` with the new mapping
-3. Next `session:start` (next message), the router hook picks up the change
+3. Next `session:start` (next message), the router hook rereads the file and picks up the change
+
+No gateway restart is required for `/route` changes.
 
 ### When to use /route vs CLI
 
@@ -108,11 +110,11 @@ topics:
 | Provider | Model ID Format | Example |
 |---|---|---|
 | opencode-go | `opencode-go/<model>` | `opencode-go/deepseek-v4-pro` |
-| OpenAI | `gpt-4o`, `gpt-4o-mini` | `gpt-4o-mini` |
-| Anthropic | `claude-sonnet-4-20250514` | `claude-sonnet-4-20250514` |
+| OpenAI | `gpt-5.5`, `gpt-5.4-mini` | `gpt-5.4-mini` |
+| Anthropic | `claude-sonnet-4-6` | `claude-sonnet-4-6` |
 | OpenRouter | `openrouter/<provider>/<model>` | `openrouter/anthropic/claude-sonnet-4` |
-| DeepSeek | `deepseek-chat` | `deepseek-chat` |
-| Google | `gemini-2.5-flash` | `gemini-2.5-flash` |
+| DeepSeek | `deepseek-v4-pro`, `deepseek-v4-flash` | `deepseek-v4-pro` |
+| Google | `gemini-2.5-flash`, `gemini-2.5-pro` | `gemini-2.5-flash` |
 
 See the full [providers guide](../providers.md) for model lists and pricing.
 
@@ -129,10 +131,10 @@ topics:
     model: "gpt-4o"
     provider: "openai"                # uses OPENAI_API_KEY
   "7":
-    model: "claude-sonnet-4-20250514"
+    model: "claude-sonnet-4-6"
     provider: "anthropic"             # uses ANTHROPIC_API_KEY
   "99":
-    model: "deepseek-chat"
+    model: "deepseek-v4-pro"
     provider: "deepseek"              # uses DEEPSEEK_API_KEY
 ```
 
@@ -140,7 +142,7 @@ Via CLI:
 ```bash
 hermes-kit router set-default --model opencode-go/qwen3.6-plus
 hermes-kit router add 42 --model gpt-4o --provider openai
-hermes-kit router add 7 --model claude-sonnet-4-20250514 --provider anthropic
+hermes-kit router add 7 --model claude-sonnet-4-6 --provider anthropic
 ```
 
 Supported provider keys: `opencode-go`, `openai`, `anthropic`, `deepseek`, `google`, `openrouter`.
@@ -185,3 +187,5 @@ hermes-kit install model-switch
 hermes-kit doctor   # should show model-switch installed
 hermes logs | grep "/route"   # after sending a command
 ```
+
+Then send one normal follow-up message in the same topic or DM. That next message should use the new route.

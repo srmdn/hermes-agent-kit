@@ -8,12 +8,16 @@ from hermes_kit.bridge import RateLimitExceeded
 
 def _save_original():
     from gateway.run import GatewayRunner
-    return GatewayRunner._resolve_session_agent_runtime
+    return (
+        GatewayRunner._resolve_session_agent_runtime,
+        GatewayRunner._run_agent,
+    )
 
 
-def _restore_original(original):
+def _restore_original(original_resolver, original_run_agent):
     from gateway.run import GatewayRunner
-    GatewayRunner._resolve_session_agent_runtime = original
+    GatewayRunner._resolve_session_agent_runtime = original_resolver
+    GatewayRunner._run_agent = original_run_agent
 
 
 def _clear_bridge_state():
@@ -24,6 +28,9 @@ def _clear_bridge_state():
     bridge._rate_windows.clear()
     bridge._rate_limited.clear()
     bridge._session_costs.clear()
+    bridge._session_keys_by_session_id.clear()
+    bridge._latest_agent_run.clear()
+    bridge._last_usage_totals.clear()
 
 
 def _make_mock_runner(session_model_overrides=None):
@@ -41,7 +48,7 @@ class TestBridgePatchAgainstRealHermes:
         self._original = _save_original()
 
     def teardown_method(self):
-        _restore_original(self._original)
+        _restore_original(*self._original)
         _clear_bridge_state()
 
     def test_patch_replaces_real_resolver(self):
@@ -57,10 +64,10 @@ class TestBridgePatchAgainstRealHermes:
     def test_original_resolver_restored(self):
         bridge.patch_gateway_resolver()
 
-        _restore_original(self._original)
+        _restore_original(*self._original)
 
         from gateway.run import GatewayRunner
-        assert GatewayRunner._resolve_session_agent_runtime is self._original
+        assert GatewayRunner._resolve_session_agent_runtime is self._original[0]
 
 
 class TestModelOverrideEndToEnd:
@@ -73,7 +80,7 @@ class TestModelOverrideEndToEnd:
         self._resolver = GatewayRunner._resolve_session_agent_runtime
 
     def teardown_method(self):
-        _restore_original(self._original)
+        _restore_original(*self._original)
         _clear_bridge_state()
 
     def test_override_changes_model(self):
@@ -111,7 +118,7 @@ class TestRateLimitEndToEnd:
         self._resolver = GatewayRunner._resolve_session_agent_runtime
 
     def teardown_method(self):
-        _restore_original(self._original)
+        _restore_original(*self._original)
         _clear_bridge_state()
 
     def test_rate_limited_session_raises_rate_limit_exceeded(self):
@@ -143,7 +150,7 @@ class TestPatchPreservesOriginalBehavior:
         self._resolver = GatewayRunner._resolve_session_agent_runtime
 
     def teardown_method(self):
-        _restore_original(self._original)
+        _restore_original(*self._original)
         _clear_bridge_state()
 
     def test_unpatched_sessions_still_work(self):
