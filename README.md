@@ -10,7 +10,7 @@ hermes-kit fills these gaps with production-grade hooks.
 
 ## Prerequisites
 
-- Python ≥ 3.11
+- Python 3.11 to 3.13
 - [Hermes Agent](https://github.com/NousResearch/hermes-agent) v0.16.0 (pinned)
 - **Hermes configured with a working model + provider** — hermes-kit is a plugin, not standalone. Hermes must be able to respond to messages BEFORE installing hooks.
 - A configured gateway (Telegram, Discord, etc.)
